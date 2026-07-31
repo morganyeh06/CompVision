@@ -4,6 +4,70 @@ import mediapipe as mp
 from mediapipe.tasks import python
 from mediapipe.tasks.python import vision
 import easyocr
+import threading
+
+# --------------------
+# CLASSES
+# --------------------
+
+class AsyncOCR:
+    def __init__(self, languages=["en"], use_gpu=False):
+        self.reader = easyocr.Reader(languages, gpu=use_gpu)
+        self.is_processing = False
+        self.latest_result = None
+
+    def process_roi_async(self, roi_image):
+        """
+        Starts OCR on background thread if worker not currently in use
+        """
+        # skip frame if OCR already running on previous frame
+        if self.is_processing:
+            return
+
+        if roi_image is None or roi_image.size == 0:
+            return 
+
+        # mark as busy and start worker thread
+        self.is_processing = True
+
+        # pass copy of image to main thread
+        thread = threading.Thread(
+            target=self.read_judge_card,
+            args=(roi_image.copy(),),
+            daemon=True
+        )
+        thread.start()
+
+    def read_judge_card(self, roi):
+        """
+        Worker method for reading card text
+        """
+        try:
+            results = self.reader.readtext(roi, detail=0)
+            if results:
+                raw_text = "".join(results).upper()
+                
+                # Correct slight misreads
+                if "OK" in raw_text or "0K" in raw_text:
+                    self.latest_result = "OK"
+                elif "+2" in raw_text or "+" in raw_text or "2" in raw_text:
+                    self.latest_result = "+2"
+                elif "DNF" in raw_text or "D" in raw_text or "N" in raw_text or "F" in raw_text:
+                    self.latest_result = "DNF"
+                else:
+                    self.latest_result = None
+            else:
+                self.latest_result = None
+
+        except Exception as e:
+            print(f"OCR Exception: {e}")
+            self.latest_result = None
+        finally:
+            # release lock for next ROI to be processed
+            self.is_processing = False
+
+    def get_latest_result(self):
+        return self.latest_result
 
 # --------------------
 # GLOBAL VARIABLES
@@ -12,7 +76,7 @@ TIMER_CLASS = "timer"
 CARD_CLASS = "judge_card"
 
 # OCR Config
-ocr_reader = easyocr.Reader(["en"], gpu=False)
+ocr_reader = AsyncOCR(use_gpu=False)
 
 # MediaPipe config
 base_options = python.BaseOptions(model_asset_path="../models/hand_landmarker.task")
@@ -130,9 +194,8 @@ def detect_penalty(frame, yolo_results):
 
     # read text on card if it exists
     if card_roi is not None:
-        card_text = read_card_text(card_roi)
-        if card_text is not None:
-            return card_text
+        ocr_reader.process_roi_async(card_roi)
+        return ocr_reader.get_latest_result()
 
     # look for hand gesture if card not found
     gesture = classify_hand_gesture(frame)
