@@ -1,11 +1,120 @@
 import cv2
 from ultralytics import YOLO
+import mediapipe as mp
+from mediapipe.tasks import python
+from mediapipe.tasks.python import vision
 
+# --------------------
+# GLOBAL VARIABLES
+# --------------------
 TIMER_CLASS = "timer"
 CARD_CLASS = "judge_card"
 
+# MediaPipe config
+base_options = python.BaseOptions(model_asset_path="../models/hand_landmarker.task")
+options = vision.HandLandmarkerOptions(
+    base_options=base_options,
+    num_hands=1,
+    min_hand_detection_confidence=0.6,
+    min_hand_presence_confidence=0.6,
+    min_tracking_confidence=0.6,
+    running_mode=vision.RunningMode.IMAGE 
+)
+detector = vision.HandLandmarker.create_from_options(options)
+
+# --------------------
+# HELPER FUNCTIONS
+# --------------------
+
+def classify_hand_gesture(frame):
+    """
+    Analyzes frame and determine whether hand gesture corresponds to OK, +2, DNF, or none
+    """
+    rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+    mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb_frame)
+    results = detector.detect(mp_image)
+
+    if not results.hand_landmarks:
+        return None
+
+    # get hand landmarks for first detected hand
+    lm = results.hand_landmarks[0]
+    
+
+    # finger positions, indices below
+    # 0: wrist, 4: thumb tip, 2: thumb MCP
+    # 8: index tip, 6: index PIP
+    # 12: middle tip, 10: middle PIP
+    # 16: ring tip, 14: ring PIP
+    # 20: pinky tip, 18: pinky PIP
+    index_folded = lm[8].y > lm[6].y
+    middle_folded = lm[12].y > lm[10].y
+    ring_folded = lm[16].y > lm[14].y
+    pinky_folded = lm[20].y > lm[18].y
+
+
+    # helper functions for determining hand gestures
+    def is_ok_gesture():
+        """
+        Returns true if hand landmarks create OK gesture (thumbs up), false otherwise
+        """
+        return lm[4].y < lm[2].y and index_folded and middle_folded
+
+    def is_plus2_gesture():
+        """
+        Returns true if hand landmarks create +2 gesture (two fingers up), false otherwise
+        """
+        return not index_folded and not middle_folded and ring_folded and pinky_folded
+
+    def is_dnf_gesture():
+        """
+        Returns true if hand landmarks create DNF gesture (thumbs down), false otherwise
+        """
+        return lm[4].y > lm[2].y and index_folded and middle_folded
+
+    # determine hand gesture shown
+    if is_ok_gesture():
+        return "OK"
+    elif is_plus2_gesture():
+        return "+2"
+    elif is_dnf_gesture():
+        return "DNF"
+    else:
+        return None
+
+
+def detect_penalty(frame, yolo_results):
+    """
+    Determines penalty by checking judge card text or hand gesture, depending on what is shown
+    """
+    card_roi = None
+
+    # check if judge card in captured in frame
+    for box in yolo_results[0].boxes:
+        class_id = int(box.cls[0])
+        class_name = yolo_results[0].names[class_id]
+
+        if class_name == CARD_CLASS:
+            x1, y1, x2, y2 = map(int, box.xyxy[0])
+            card_roi = frame[y1:y2, x1:x2]
+            break
+
+    # read text on card if it exists
+    if card_roi is not None:
+        print("Using Card Text") # Change later to actually read text
+        return "text"
+
+    # look for hand gesture if card not found
+    gesture = classify_hand_gesture(frame)
+    if gesture is not None:
+        return gesture
+
+    # no card/gesture found
+    return None
+
+
 def main():
-    # Load custom YOLO model
+    # Load custom YOLO modelq
     model = YOLO('../models/best.pt')
 
     # Open a connection to the webcam
@@ -19,8 +128,16 @@ def main():
             
         # Run YOLO inference on the current frame
         results = model(frame, verbose=False)
+
+        # determine penalty for solve
+        penalty = detect_penalty(frame, results)
+
+        # display penalty on screen
+        status_text = f"Penalty: {penalty}" if penalty else "Searching..."
+        cv2.putText(frame, f"Status: {status_text}", (20, 40), 
+                    cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
         
-        timer_roi = None
+        '''timer_roi = None
         card_roi = None
 
         # Parse the YOLO results
@@ -44,14 +161,10 @@ def main():
                 
                 # Draw a blue box for visual debugging
                 cv2.rectangle(frame, (x1, y1), (x2, y2), (255, 0, 0), 2)
-                cv2.putText(frame, "Card", (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 2)
+                cv2.putText(frame, "Card", (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 2)'''
 
         # Show the live feed 
         cv2.imshow("WCA Vision Assistant", frame)
-        
-        # Show the cropped timer ROI in a separate window to verify the crop
-        #if timer_roi is not None and timer_roi.size > 0:
-             #cv2.imshow("Timer ROI", timer_roi)
 
         # Press 'q' to quit
         if cv2.waitKey(1) & 0xFF == ord('q'):
