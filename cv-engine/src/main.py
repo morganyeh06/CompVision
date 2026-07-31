@@ -79,6 +79,7 @@ def classify_hand_gesture(frame):
     middle_folded = lm[12].y > lm[10].y
     ring_folded = lm[16].y > lm[14].y
     pinky_folded = lm[20].y > lm[18].y
+    thumb_up = lm[4].y < lm[3].y and lm[3].y < lm[2].y and lm[2].y < lm[1].y
 
 
     # helper functions for determining hand gestures
@@ -86,7 +87,7 @@ def classify_hand_gesture(frame):
         """
         Returns true if hand landmarks create OK gesture (thumbs up), false otherwise
         """
-        return lm[4].y < lm[2].y and index_folded and middle_folded
+        return lm[4].y < lm[2].y and index_folded and middle_folded and thumb_up
 
     def is_plus2_gesture():
         """
