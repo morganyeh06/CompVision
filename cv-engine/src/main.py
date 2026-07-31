@@ -3,12 +3,16 @@ from ultralytics import YOLO
 import mediapipe as mp
 from mediapipe.tasks import python
 from mediapipe.tasks.python import vision
+import easyocr
 
 # --------------------
 # GLOBAL VARIABLES
 # --------------------
 TIMER_CLASS = "timer"
 CARD_CLASS = "judge_card"
+
+# OCR Config
+ocr_reader = easyocr.Reader(["en"], gpu=False)
 
 # MediaPipe config
 base_options = python.BaseOptions(model_asset_path="../models/hand_landmarker.task")
@@ -25,6 +29,30 @@ detector = vision.HandLandmarker.create_from_options(options)
 # --------------------
 # HELPER FUNCTIONS
 # --------------------
+
+def read_card_text(card_roi):
+    """
+    Runs OCR on judge card region
+    """
+    if card_roi is None or card_roi.size == 0:
+        return None
+
+    # run OCR
+    results = ocr_reader.readtext(card_roi, detail=0)
+    if not results:
+        return None
+    raw_text = "".join(results).upper()
+
+    # Correct slight misreads
+    if "OK" in raw_text or "0K" in raw_text:
+        return "OK"
+    elif "+2" in raw_text or "+" in raw_text or "2" in raw_text:
+        return "+2"
+    elif "DNF" in raw_text or "D" in raw_text or "N" in raw_text or "F" in raw_text:
+        return "DNF"
+    else:
+        return None
+
 
 def classify_hand_gesture(frame):
     """
@@ -101,8 +129,9 @@ def detect_penalty(frame, yolo_results):
 
     # read text on card if it exists
     if card_roi is not None:
-        print("Using Card Text") # Change later to actually read text
-        return "text"
+        card_text = read_card_text(card_roi)
+        if card_text is not None:
+            return card_text
 
     # look for hand gesture if card not found
     gesture = classify_hand_gesture(frame)
