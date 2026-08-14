@@ -1,10 +1,16 @@
+import os
+import requests
+import base64
 import cv2
+import json
 from ultralytics import YOLO
 import mediapipe as mp
 from mediapipe.tasks import python
 from mediapipe.tasks.python import vision
+from numericvision import detect_box_sequences
 import easyocr
 import threading
+from dotenv import load_dotenv
 
 # --------------------
 # CLASSES
@@ -72,6 +78,9 @@ class AsyncOCR:
 # --------------------
 # GLOBAL VARIABLES
 # --------------------
+
+load_dotenv("../../.env")
+
 TIMER_CLASS = "timer"
 CARD_CLASS = "judge_card"
 
@@ -90,8 +99,11 @@ options = vision.HandLandmarkerOptions(
 )
 detector = vision.HandLandmarker.create_from_options(options)
 
+ROBOFLOW_API_KEY = os.getenv("ROBOFLOW_API_KEY")
+ROBOFLOW_URL = os.getenv("ROBOFLOW_URL")
+
 # --------------------
-# HELPER FUNCTIONS
+# PENALTY DETECTION
 # --------------------
 
 def read_card_text(card_roi):
@@ -176,21 +188,10 @@ def classify_hand_gesture(frame):
         return None
 
 
-def detect_penalty(frame, yolo_results):
+def detect_penalty(frame, card_roi):
     """
     Determines penalty by checking judge card text or hand gesture, depending on what is shown
     """
-    card_roi = None
-
-    # check if judge card in captured in frame
-    for box in yolo_results[0].boxes:
-        class_id = int(box.cls[0])
-        class_name = yolo_results[0].names[class_id]
-
-        if class_name == CARD_CLASS:
-            x1, y1, x2, y2 = map(int, box.xyxy[0])
-            card_roi = frame[y1:y2, x1:x2]
-            break
 
     # read text on card if it exists
     if card_roi is not None:
@@ -205,6 +206,84 @@ def detect_penalty(frame, yolo_results):
     # no card/gesture found
     return None
 
+# --------------------
+# READ TIMER
+# --------------------
+
+def img_to_base64(img, jpeg_quality=90):
+    """
+    Converts image to base64
+    """
+    success, buffer = cv2.imencode(
+        ".jpg",
+        img,
+        [cv2.IMWRITE_JPEG_QUALITY, jpeg_quality],
+    )
+
+    if not success:
+        raise RuntimeError("Failed to encode video frame")
+
+    return base64.b64encode(buffer).decode("utf-8")
+
+
+def read_timer_text(img):
+    """
+    Reads timer using Roboflow model given an base64 image
+    Returns JSON results
+    """
+    img_base64 = img_to_base64(img)
+
+    response = requests.post(
+        url=ROBOFLOW_URL,
+        json={
+            "api_key": ROBOFLOW_API_KEY,
+            "inputs": {
+                "image": {
+                    "type": "base64",
+                    "value": img_base64,
+                }
+            },
+        },
+        timeout=120,
+    )
+
+    response.raise_for_status()
+    result = response.json()
+
+    return result
+
+
+def read_time(timer_roi):
+    """
+    Reads time displayed on timer and returns as a numerical value
+    """
+    
+    # read text on card if it exists
+    if timer_roi is not None and timer_roi.size > 0:
+        response = read_timer_text(timer_roi)
+
+        # get digits as json
+        digits_json = response["outputs"][0]["predictions"]["predictions"]
+
+        # get list of (x-coordinate, digit) and sort by x-coordinate (left to right)
+        pairs = []
+        for item in digits_json:
+            pairs.append((item["x"], item["class"]))
+        pairs.sort()
+
+        # get string of just digits
+        digits = ""
+        for pair in pairs:
+            digits += pair[1]
+
+        print(digits)
+        return digits
+
+    return None
+
+# --------------------
+# MAIN
+# --------------------
 
 def main():
     # Load custom YOLO modelq
@@ -218,17 +297,40 @@ def main():
         if not success:
             print("Failed to read frame from camera.")
             break
-            
+
         # Run YOLO inference on the current frame
         results = model(frame, verbose=False)
 
-        # determine penalty for solve
-        penalty = detect_penalty(frame, results)
+        timer_roi = None
+        card_roi = None
 
-        # display penalty on screen
-        status_text = f"Penalty: {penalty}" if penalty else "Searching..."
-        cv2.putText(frame, f"Status: {status_text}", (20, 40), 
+        # check if timer/card in captured in frame
+        for box in results[0].boxes:
+            class_id = int(box.cls[0])
+            class_name = results[0].names[class_id]
+                
+            if class_name == TIMER_CLASS:
+                x1, y1, x2, y2 = map(int, box.xyxy[0])
+                timer_roi = frame[y1:y2, x1:x2]
+
+            if class_name == CARD_CLASS:
+                x1, y1, x2, y2 = map(int, box.xyxy[0])
+                card_roi = frame[y1:y2, x1:x2]
+
+        # determine penalty for solve
+        penalty = detect_penalty(frame, card_roi)
+
+        # read timer
+        time = read_time(timer_roi)
+
+        # display penalty and time on screen
+        penalty_text = f"Penalty: {penalty}" if penalty else "Searching..."
+        timer_text = f"Time: {time}"
+        cv2.putText(frame, f"Status: {timer_text}", (20, 40), 
                     cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+        cv2.putText(frame, f"Status: {penalty_text}", (20, 80), 
+                            cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+
         
         '''timer_roi = None
         card_roi = None
@@ -257,11 +359,13 @@ def main():
                 cv2.putText(frame, "Card", (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 2)'''
 
         # Show the live feed 
-        cv2.imshow("WCA Vision Assistant", frame)
+        cv2.imshow("CompVision", frame)
 
         # Press 'q' to quit
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
+
+        break
 
     cap.release()
     cv2.destroyAllWindows()
