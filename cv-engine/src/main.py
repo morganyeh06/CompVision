@@ -226,7 +226,7 @@ def img_to_base64(img, jpeg_quality=90):
     return base64.b64encode(buffer).decode("utf-8")
 
 
-def read_timer_text(img):
+def read_display_roboflow(img):
     """
     Reads timer using Roboflow model given an base64 image
     Returns JSON results
@@ -252,32 +252,58 @@ def read_timer_text(img):
 
     return result
 
+def get_roboflow_digits(response):
+    """
+    Returns the digits from roboflow model response
+    """
+    # get digits as json
+    digits_json = response["outputs"][0]["predictions"]["predictions"]
+    
+    # get list of (x-coordinate, digit) and sort by x-coordinate (left to right)
+    pairs = []
+    for item in digits_json:
+        pairs.append((item["x"], item["class"]))
+    pairs.sort()
+    
+    # get string of digits (note . may be read as well)
+    digits = ""
+    for pair in pairs:
+        digits += pair[1]
+    
+    return digits
+
+
+def clean_time_str(time):
+    """
+    Formats text as a M:SS.SSS
+    """
+    # Check if raw_text is M.SS.SSS or M.S.SSS
+    if time.count('.') > 1:
+        # replace first instance of . with :
+        time = time.replace('.', ':', 1)
+
+    # Check if time is M:S.SSS
+    if ':' in time and len(time) == 7:
+        # change text to M:0S.SSS
+        time = time[:2] + "0" + time[2:]
+
+    return time
+
 
 def read_time(timer_roi):
     """
     Reads time displayed on timer and returns as a numerical value
     """
-    
     # read text on card if it exists
     if timer_roi is not None and timer_roi.size > 0:
-        response = read_timer_text(timer_roi)
+        # read display and get digits read
+        response = read_display_roboflow(timer_roi)
+        raw_text = get_roboflow_digits(response)
 
-        # get digits as json
-        digits_json = response["outputs"][0]["predictions"]["predictions"]
-
-        # get list of (x-coordinate, digit) and sort by x-coordinate (left to right)
-        pairs = []
-        for item in digits_json:
-            pairs.append((item["x"], item["class"]))
-        pairs.sort()
-
-        # get string of just digits
-        digits = ""
-        for pair in pairs:
-            digits += pair[1]
-
-        print(digits)
-        return digits
+        # format the string as a proper time
+        time = clean_time_str(raw_text)
+        return time
+        
 
     return None
 
@@ -331,32 +357,6 @@ def main():
         cv2.putText(frame, f"Status: {penalty_text}", (20, 80), 
                             cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
 
-        
-        '''timer_roi = None
-        card_roi = None
-
-        # Parse the YOLO results
-        for box in results[0].boxes:
-            # Get bounding box coordinates and class ID
-            x1, y1, x2, y2 = map(int, box.xyxy[0])
-            class_id = int(box.cls[0])
-            class_name = model.names[class_id]
-
-            if class_name == TIMER_CLASS:
-                # Crop the frame using the bounding box to isolate the timer
-                timer_roi = frame[y1:y2, x1:x2]
-                
-                # Draw a green box for visual debugging
-                cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
-                cv2.putText(frame, "Timer", (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
-                
-            elif class_name == CARD_CLASS:
-                # Crop the frame to isolate the judge's card
-                card_roi = frame[y1:y2, x1:x2]
-                
-                # Draw a blue box for visual debugging
-                cv2.rectangle(frame, (x1, y1), (x2, y2), (255, 0, 0), 2)
-                cv2.putText(frame, "Card", (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 2)'''
 
         # Show the live feed 
         cv2.imshow("CompVision", frame)
@@ -365,7 +365,7 @@ def main():
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
 
-        break
+        
 
     cap.release()
     cv2.destroyAllWindows()
