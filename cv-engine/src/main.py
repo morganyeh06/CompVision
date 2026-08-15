@@ -3,16 +3,18 @@ import requests
 import base64
 import cv2
 import json
+import time
+from dotenv import load_dotenv
+from enum import Enum
+
+import easyocr
+import threading
 from ultralytics import YOLO
 import mediapipe as mp
 from mediapipe.tasks import python
 from mediapipe.tasks.python import vision
-from numericvision import detect_box_sequences
-import easyocr
-import threading
-from dotenv import load_dotenv
-import time
-from enum import Enum
+
+
 
 # --------------------
 # CLASSES
@@ -210,7 +212,6 @@ def detect_penalty(frame, card_roi):
     """
     Determines penalty by checking judge card text or hand gesture, depending on what is shown
     """
-
     # read text on card if it exists
     if card_roi is not None:
         ocr_reader.process_roi_async(card_roi)
@@ -291,21 +292,31 @@ def get_roboflow_digits(response):
     return digits
 
 
-def clean_time_str(time):
+def clean_time_str(time_str):
     """
     Formats text as a M:SS.SSS
     """
+    # remove 'screen' from string
+    if 'screen' in time_str:
+        time_str = time_str.replace('screen', '')
+
+    # Check if . is missing from time (eg. SSSS)
+    if time_str.count('.') == 0:
+        # insert . in the 4th position from the end
+        i = len(time_str) - 3
+        time_str = time_str[:i] + "." + time_str[i:]
+
     # Check if raw_text is M.SS.SSS or M.S.SSS
-    if time.count('.') > 1:
+    if time_str.count('.') > 1:
         # replace first instance of . with :
-        time = time.replace('.', ':', 1)
+        time_str = time_str.replace('.', ':', 1)
 
     # Check if time is M:S.SSS
-    if ':' in time and len(time) == 7:
+    if ':' in time_str and len(time_str) == 7:
         # change text to M:0S.SSS
-        time = time[:2] + "0" + time[2:]
+        time_str = time_str[:2] + "0" + time_str[2:]
 
-    return time
+    return time_str
 
 
 def read_time(timer_roi):
