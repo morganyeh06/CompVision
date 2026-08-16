@@ -95,7 +95,7 @@ def process_state_machine(detected_penalty, timer_roi):
 def main():
     global current_time_str, current_penalty_str
 
-    # Load custom YOLO modelq
+    # load YOLO model
     model = YOLO('../models/best.pt')
 
     # Open a connection to the webcam

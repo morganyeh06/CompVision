@@ -1,3 +1,5 @@
+import sys
+import os
 import easyocr
 import threading
 import mediapipe as mp
