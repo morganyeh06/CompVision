@@ -3,8 +3,8 @@ import time
 from enum import Enum
 from ultralytics import YOLO
 
-from detect_penalty import detect_penalty
-from read_timer import read_time
+from cv_engine.src.detect_penalty import detect_penalty
+from cv_engine.src.read_timer import read_time
 
 # --------------------
 # CLASSES

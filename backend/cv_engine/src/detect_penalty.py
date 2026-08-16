@@ -1,11 +1,10 @@
-import sys
-import os
 import easyocr
 import threading
 import mediapipe as mp
 import cv2
 from mediapipe.tasks import python
 from mediapipe.tasks.python import vision
+from pathlib import Path
 
 # --------------------
 # CLASSES
@@ -78,7 +77,9 @@ class AsyncOCR:
 ocr_reader = AsyncOCR(use_gpu=False)
 
 # MediaPipe config
-base_options = python.BaseOptions(model_asset_path="../models/hand_landmarker.task")
+CURRENT_DIR = Path(__file__).resolve().parent
+MODEL_PATH = str(CURRENT_DIR.parent / "models" / "hand_landmarker.task")
+base_options = python.BaseOptions(model_asset_path=MODEL_PATH)
 options = vision.HandLandmarkerOptions(
     base_options=base_options,
     num_hands=1,

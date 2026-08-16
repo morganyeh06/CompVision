@@ -2,13 +2,13 @@ import cv2
 import os
 import base64
 import requests
-from dotenv import load_dotenv
+from dotenv import load_dotenv, find_dotenv
 
 # --------------------
 # GLOBAL VARIABLES
 # --------------------
 
-load_dotenv("../../../.env")
+load_dotenv(find_dotenv())
 
 # Roboflow Config
 ROBOFLOW_API_KEY = os.getenv("ROBOFLOW_API_KEY")
