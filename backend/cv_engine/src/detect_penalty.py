@@ -163,7 +163,7 @@ def classify_hand_gesture(frame):
         """
         Returns true if hand landmarks create DNF gesture (thumbs down), false otherwise
         """
-        return lm[4].y > lm[2].y and index_folded and middle_folded
+        return lm[4].y > lm[2].y #and index_folded and middle_folded
 
     # determine hand gesture shown
     if is_ok_gesture():
