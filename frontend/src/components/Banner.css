@@ -1,0 +1,35 @@
+.header {
+  width: 100%;
+  min-width: 400px;
+  padding: 15px;
+
+  color: white;
+  background: #3d85c6;
+  
+  display: flex;
+  align-items: center;
+}
+
+#title {
+  margin-top: auto;
+  margin-bottom: auto;
+  margin-left: 10px;
+
+  font-size: 20px;
+}
+
+.tr-corner {
+  margin-left: auto; 
+  margin-right: 10px;
+  display: flex;
+}
+
+.repo-link {
+  margin-left: 10px;
+}
+
+.link-img {
+  position: relative;
+  width: 28px;
+  height: 28px;
+}

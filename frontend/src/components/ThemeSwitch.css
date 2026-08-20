@@ -1,0 +1,17 @@
+.theme-toggle {
+  margin-right: 10px;
+}
+
+#theme-switch {
+  display: none;
+}
+
+.toggle-img {
+  position: relative;
+  width: 28px;
+  height: 28px;
+}
+
+.toggle-img:hover {
+  cursor: pointer;
+}
