@@ -1,0 +1,18 @@
+.panel {
+    border-color: black;
+    border-style: solid;
+    border-radius: 5px;
+}
+
+.config {
+    margin: 10px;
+}
+
+.input-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.config-row {
+    display: flex;
+}

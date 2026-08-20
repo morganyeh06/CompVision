@@ -1,0 +1,22 @@
+.field-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+
+  margin-left: auto;
+  margin-right: auto;
+  margin-bottom: 5px;
+}
+
+select:hover {
+  cursor: pointer;
+}
+
+select:disabled:hover {
+  cursor: not-allowed;
+}
+
+.input-disabled:hover {
+  cursor: not-allowed;
+}
