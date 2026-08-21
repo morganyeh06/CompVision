@@ -14,7 +14,7 @@ export default function Dropdown( {name, id, text, options} : Props ) {
 
     return (<>
         <div className='field-col'>
-            <label className="input-label" htmlFor={id}>{text}</label>
+            <label className='input-label' htmlFor={id}>{text}</label>
             <select name={name} className={classes} id={id}>
                 {dropdownOptions}
             </select>

@@ -1,11 +1,16 @@
 .panel {
-    border-color: black;
+    margin-top: 20px;
+    margin-left: 10px;
     border-style: solid;
     border-radius: 5px;
 }
 
+.input-label {
+    font-weight: 600;
+}
+
 .config {
-    margin: 10px;
+    margin: 15px;
 }
 
 .input-group {
@@ -15,4 +20,15 @@
 
 .config-row {
     display: flex;
+    margin-top: 15px;
+    margin-bottom: 15px;
+}
+
+.input-label {
+    text-align: left;
+}
+
+#competitors {
+    min-height: 200px;
+    height: auto;
 }

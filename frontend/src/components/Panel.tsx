@@ -5,7 +5,7 @@ import NumInput from './NumInput.tsx';
 export default function Panel() {
     const eventOptions = ["3x3", "2x2", "4x4", "5x5", "6x6", "7x7", "3x3 OH", "3BLD",
                           "Pyraminx", "Megaminx", "Skewb", "Square-1", "Clock", "FTO"];
-    const avgFormats = ["Ao5", "Mo3"]
+    const avgFormats = ["Ao5", "Mo3"];
 
     return(<>
         <div className="panel">
