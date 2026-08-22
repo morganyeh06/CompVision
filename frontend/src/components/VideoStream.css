@@ -15,3 +15,17 @@
     max-width: 100%;
     height: auto;
 }
+
+.result-container {
+    display: flex;
+    margin-top: 10px;
+    margin-bottom: 10px;
+    width: 100%;
+}
+
+.result-text {
+    margin-right: auto;
+    margin-left: auto;
+    min-width: 20%;
+    font-weight: 500;
+}
