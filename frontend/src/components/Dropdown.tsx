@@ -5,15 +5,17 @@ interface Props {
     id: string
     text: string
     options: Array<string>
+    direction: string // one of {col, row}
 }
 
-export default function Dropdown( {name, id, text, options} : Props ) {
+export default function Dropdown( {name, id, text, options, direction} : Props ) {
     // select options and CSS classes
     const dropdownOptions = options.map((opt) => (<option key={opt}>{opt}</option>));
-    const classes = "form-select input-field"
+    const classes = "form-select input-field";
+    const divClass = 'field-' + direction;
 
     return (<>
-        <div className='field-col'>
+        <div className={divClass}>
             <label className='input-label' htmlFor={id}>{text}</label>
             <select name={name} className={classes} id={id}>
                 {dropdownOptions}

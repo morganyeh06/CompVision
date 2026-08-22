@@ -5,6 +5,13 @@
   width: 30%;
 }
 
+.field-row {
+  display: flex;
+  flex-direction: row;
+
+  width: 100%;
+}
+
 
 select:hover {
   cursor: pointer;
@@ -21,8 +28,7 @@ select:disabled:hover {
 .input-label {
     margin-left: 0px;
     margin-right: auto;
-}
-
-#events {
-  margin-left: 0px;
+    white-space: nowrap;
+    margin-top: auto;
+    margin-bottom: auto; 
 }

@@ -1,7 +1,8 @@
 .top-section {
     display: flex;
+    margin-top: 20px;
 }
 
-.live-feed {
-    border-style: solid;
+#curr-competitor {
+  border-style: solid;
 }

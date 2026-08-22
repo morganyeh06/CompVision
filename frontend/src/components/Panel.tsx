@@ -15,9 +15,9 @@ export default function Panel() {
                     <input className='input-field' id="comp-name"></input>
                 </div>
                 <div className="config-row">
-                    <Dropdown name="events" id="events" text="Event" options={eventOptions}></Dropdown>
+                    <Dropdown name="events" id="events" text="Event" options={eventOptions} direction='col'></Dropdown>
                     <NumInput id="round" minVal={1} defaultVal={1} text="Round"></NumInput>
-                    <Dropdown name='formats' id='formats' text='Format' options={avgFormats}></Dropdown>
+                    <Dropdown name='formats' id='formats' text='Format' options={avgFormats} direction='col'></Dropdown>
                 </div>
                 <div className='input-group'>
                     <label className="input-label" htmlFor='competitors'>Competitor List</label>

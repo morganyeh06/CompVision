@@ -1,0 +1,17 @@
+.video-stream {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    max-width: 50%;
+
+    border-style: solid;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.live-feed {
+    border-style: solid;
+    max-width: 100%;
+    height: auto;
+}
