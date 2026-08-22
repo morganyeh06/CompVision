@@ -13,10 +13,11 @@ export default function Dropdown( {name, id, text, options, direction} : Props )
     const dropdownOptions = options.map((opt) => (<option key={opt}>{opt}</option>));
     const classes = "form-select input-field";
     const divClass = 'field-' + direction;
+    const labelId = id + '-label';
 
     return (<>
         <div className={divClass}>
-            <label className='input-label' htmlFor={id}>{text}</label>
+            <label className='input-label' id={labelId} htmlFor={id}>{text}</label>
             <select name={name} className={classes} id={id}>
                 {dropdownOptions}
             </select>
