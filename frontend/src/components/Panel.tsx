@@ -1,4 +1,5 @@
 import './Panel.css';
+import { useState } from 'react';
 import Dropdown from './Dropdown.tsx';
 import NumInput from './NumInput.tsx';
 
@@ -6,6 +7,12 @@ export default function Panel() {
     const eventOptions = ["3x3", "2x2", "4x4", "5x5", "6x6", "7x7", "3x3 OH", "3BLD",
                           "Pyraminx", "Megaminx", "Skewb", "Square-1", "Clock", "FTO"];
     const avgFormats = ["Ao5", "Mo3"];
+
+    const [isRunning, setIsRunning] = useState(false);
+
+    function handleClick() {
+        setIsRunning(!isRunning);
+    }
 
     return(<>
         <div className="panel">
@@ -23,6 +30,14 @@ export default function Panel() {
                     <label className="input-label" htmlFor='competitors'>Competitor List</label>
                     <textarea id='competitors'></textarea>
                 </div>
+            </div>
+            <div className="btns">
+                {!isRunning ? 
+                    <button type="button" className="btn btn-primary" id='start-btn' onClick={handleClick}>Start</button> : 
+                    <>
+                        <button type="button" className="btn btn-secondary" id='save'>Save</button>
+                        <button type="button" className="btn btn-danger" id='stop' onClick={handleClick}>Stop</button>
+                    </>}
             </div>
             
         </div>
