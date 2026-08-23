@@ -4,6 +4,25 @@
   width: 30%;
 }
 
+.field-row {
+  display: flex !important;
+  flex-direction: row !important;
+  justify-content: center !important; 
+  align-items: center !important;
+  gap: 15px !important; 
+  width: 100%;
+
+  margin-top: 15px;
+  margin-bottom: 15px;
+}
+
+.field-row .form-select {
+  width: auto !important;
+}
+
+.field-row .input-label {
+  margin: 0 !important;
+}
 
 select:hover {
   cursor: pointer;
@@ -21,21 +40,4 @@ select:disabled:hover {
   white-space: nowrap;
   margin-top: auto;
   margin-bottom: auto; 
-}
-
-.field-row {
-  display: flex !important;
-  flex-direction: row !important;
-  justify-content: center !important; 
-  align-items: center !important;
-  gap: 15px !important; 
-  width: 100%;
-}
-
-.field-row .form-select {
-  width: auto !important;
-}
-
-.field-row .input-label {
-  margin: 0 !important;
 }
