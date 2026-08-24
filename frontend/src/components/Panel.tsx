@@ -8,10 +8,38 @@ export default function Panel() {
                           "Pyraminx", "Megaminx", "Skewb", "Square-1", "Clock", "FTO"];
     const avgFormats = ["Ao5", "Mo3"];
 
+    // app run state
     const [isRunning, setIsRunning] = useState(false);
+    
+    // current and saved text input values
+    const [compName, setCompName] = useState("");
+    const [competitors, setCompetitors] = useState("");
+    const [savedCompName, setSavedCompName] = useState("");
+    const [savedCompetitors, setSavedCompetitors] = useState("");
 
-    function handleClick() {
+    // variables to determine whether Save button is enabled
+    const isTextModified = compName != savedCompName || competitors != savedCompetitors;
+    const isValid = compName.trim() !== "" && competitors.trim() !== "";
+    const isSaveEnabled = isTextModified && isValid;
+
+    
+    // handleClick(action) changes app run state, may change saved input values
+    // Parameters: 
+    //      action (string): one of {start, stop}
+    function handleClick(action: string) {
         setIsRunning(!isRunning);
+
+        // on start set saved values to the current values
+        if(action === "start") {
+            setSavedCompName(compName);
+            setSavedCompetitors(competitors);
+        }
+    }
+
+    // handleSave() sets the saved input values
+    function handleSave() {
+        setSavedCompName(compName);
+        setSavedCompetitors(competitors);
     }
 
     return(<>
@@ -19,7 +47,7 @@ export default function Panel() {
             <div className='config'>
                 <div className='input-group'>
                     <label className="input-label" htmlFor='comp-name'>Competition Name</label>
-                    <input className='input-field' id="comp-name"></input>
+                    <input className='input-field' id="comp-name" onChange={(e) => setCompName(e.target.value)}></input>
                 </div>
                 <div className="config-row">
                     <Dropdown name="events" id="events" text="Event" options={eventOptions} direction='col'></Dropdown>
@@ -28,15 +56,16 @@ export default function Panel() {
                 </div>
                 <div className='input-group'>
                     <label className="input-label" htmlFor='competitors'>Competitor List</label>
-                    <textarea id='competitors'></textarea>
+                    <textarea id='competitors' onChange={(e) => setCompetitors(e.target.value)}></textarea>
                 </div>
             </div>
             <div className="btns">
                 {!isRunning ? 
-                    <button type="button" className="btn btn-primary" id='start-btn' onClick={handleClick}>Start</button> : 
+                    <button type="button" className="btn btn-primary" 
+                            id='start-btn' onClick={() => {handleClick('start')}} disabled={!(competitors.trim() && compName.trim())}>Start</button> : 
                     <>
-                        <button type="button" className="btn btn-secondary" id='save'>Save</button>
-                        <button type="button" className="btn btn-danger" id='stop' onClick={handleClick}>Stop</button>
+                        <button type="button" className="btn btn-secondary" id='save-btn' disabled={!isSaveEnabled} onClick={handleSave}>Save</button>
+                        <button type="button" className="btn btn-danger" id='stop-btn' onClick={() => {handleClick('stop')}}>Stop</button>
                     </>}
             </div>
             
