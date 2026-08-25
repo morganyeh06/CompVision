@@ -215,6 +215,19 @@ def save_settings(settings: CompetitionSettings):
         "message": "Settings applied and leaderboard created."
     }
 
+@app.get("/settings")
+def get_current_settings():
+    """Returns the currently active competition settings"""
+    global app_settings
+    
+    if not app_settings:
+        return {"status": "empty", "message": "No settings configured yet."}
+        
+    return {
+        "status": "success", 
+        "data": app_settings
+    }  
+
 
 @app.get("/latest_result")
 def get_latest_result():
@@ -235,7 +248,7 @@ def get_latest_result():
     }
 
 
-@app.post("/save-result")
+@app.post("/save_result")
 def save_result(req: SaveResultRequest):
     """
     Saves competitor's result to the leaderboard
