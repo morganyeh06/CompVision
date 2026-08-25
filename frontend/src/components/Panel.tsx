@@ -3,13 +3,15 @@ import { useState } from 'react';
 import Dropdown from './Dropdown.tsx';
 import NumInput from './NumInput.tsx';
 
-export default function Panel() {
+interface Props {
+    isRunning: boolean,
+    setIsRunning: (state: boolean) => void
+}
+
+export default function Panel( {isRunning, setIsRunning} : Props ) {
     const eventOptions = ["3x3", "2x2", "4x4", "5x5", "6x6", "7x7", "3x3 OH", "3BLD",
                           "Pyraminx", "Megaminx", "Skewb", "Square-1", "Clock", "FTO"];
     const avgFormats = ["Ao5", "Mo3"];
-
-    // app run state
-    const [isRunning, setIsRunning] = useState(false);
     
     // current and saved text input values
     const [compName, setCompName] = useState("");
