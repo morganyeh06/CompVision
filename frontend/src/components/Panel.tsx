@@ -102,9 +102,9 @@ export default function Panel( {isRunning, setIsRunning, saveSettings} : Props )
                     <input className='input-field' id="comp-name" onChange={(e) => setCompName(e.target.value)}></input>
                 </div>
                 <div className="config-row">
-                    <Dropdown name="events" id="events" text="Event" options={eventOptions} direction='col' setState={setEvent}></Dropdown>
+                    <Dropdown name="events" id="events" text="Event" options={eventOptions} direction='col' isDisabled={false} setState={setEvent}></Dropdown>
                     <NumInput id="round" minVal={1} defaultVal={1} text="Round" setState={setRound}></NumInput>
-                    <Dropdown name='formats' id='formats' text='Format' options={avgFormats} direction='col' setState={setFormat}></Dropdown>
+                    <Dropdown name='formats' id='formats' text='Format' options={avgFormats} direction='col' isDisabled={isRunning} setState={setFormat}></Dropdown>
                 </div>
                 <div className='input-group'>
                     <label className="input-label" htmlFor='competitors'>Competitor List</label>
