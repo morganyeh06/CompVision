@@ -29,14 +29,19 @@ export default function Panel( {isRunning, setIsRunning, saveSettings} : Props )
     const [format, setFormat] = useState("Ao5");
     const [competitors, setCompetitors] = useState("");
     
-    // saved text input values
+    // saved input values
     const [savedCompName, setSavedCompName] = useState("");
+    const [savedEvent, setSavedEvent] = useState("3x3");
+    const [savedRound, setSavedRound] = useState("1");
+    const [savedFormat, setSavedFormat] = useState("Ao5");
     const [savedCompetitors, setSavedCompetitors] = useState("");
 
     // variables to determine whether Save button is enabled
     const isTextModified = compName != savedCompName || competitors != savedCompetitors;
+    const isDropdownModified = event != savedEvent || format != savedFormat;
+    const isNumInputModified = round != savedRound;
     const isValid = compName.trim() !== "" && competitors.trim() !== "";
-    const isSaveEnabled = isTextModified && isValid;
+    const isSaveEnabled = (isTextModified && isValid) || isDropdownModified || isNumInputModified ;
 
     
     // handleClick(action) changes app run state, may change saved input values
@@ -52,6 +57,9 @@ export default function Panel( {isRunning, setIsRunning, saveSettings} : Props )
     // handleSave() sets the saved input values
     async function handleSave() {
         setSavedCompName(compName);
+        setSavedEvent(event);
+        setSavedRound(round);
+        setSavedFormat(format);
         setSavedCompetitors(competitors);
 
         // parse competitors, split at newline
@@ -94,9 +102,9 @@ export default function Panel( {isRunning, setIsRunning, saveSettings} : Props )
                     <input className='input-field' id="comp-name" onChange={(e) => setCompName(e.target.value)}></input>
                 </div>
                 <div className="config-row">
-                    <Dropdown name="events" id="events" text="Event" options={eventOptions} direction='col'></Dropdown>
-                    <NumInput id="round" minVal={1} defaultVal={1} text="Round"></NumInput>
-                    <Dropdown name='formats' id='formats' text='Format' options={avgFormats} direction='col'></Dropdown>
+                    <Dropdown name="events" id="events" text="Event" options={eventOptions} direction='col' setState={setEvent}></Dropdown>
+                    <NumInput id="round" minVal={1} defaultVal={1} text="Round" setState={setRound}></NumInput>
+                    <Dropdown name='formats' id='formats' text='Format' options={avgFormats} direction='col' setState={setFormat}></Dropdown>
                 </div>
                 <div className='input-group'>
                     <label className="input-label" htmlFor='competitors'>Competitor List</label>
