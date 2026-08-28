@@ -13,6 +13,7 @@ export default function VideoStream( { isCameraOn, competitorList } : Props) {
     
     // competitor options 
     const options = (isCameraOn && competitorList != null) ? competitorList : ["Select a competitor"];
+    const [currCompetitor, setCurrCompetitor] = useState<string | null>((isCameraOn && competitorList != null) ? options[0] : null);
 
     // result variables
     const [time, setTime] = useState<string | null>(null);
