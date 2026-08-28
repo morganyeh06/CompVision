@@ -48,12 +48,9 @@ export default function VideoStream( { isCameraOn, competitorList } : Props) {
 
     }, [isCameraOn]);
 
-    // dummy function to pass to Dropdown component
-    function dummy(s: string) {return;}
-
     return (<>
         <div className="video-stream">
-          <Dropdown name='curr-competitor' id='curr-competitor' text='Current Competitor' options={options} direction='row' isDisabled={!isCameraOn} setState={dummy}></Dropdown>
+          <Dropdown name='curr-competitor' id='curr-competitor' text='Current Competitor' options={options} direction='row' isDisabled={!isCameraOn} setState={setCurrCompetitor}></Dropdown>
           <img src={img_src} alt="Live Camera Feed" className="live-feed"></img>
           <div className="result-container">
             {cvStatus?.includes("CAPTURING") ? (
