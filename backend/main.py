@@ -123,17 +123,6 @@ def generate_frames():
 
             cv_state["state"] = str(current_state)
             
-        
-        # display penalty, time, and state
-        penalty_text = f"Penalty: {cv_state['penalty']}"
-        timer_text = f"Time: {cv_state['time']}"
-        state_text = f"State: {cv_state['state']}"
-        cv2.putText(frame, f"{timer_text}", (20, 40), 
-                    cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
-        cv2.putText(frame, f"{penalty_text}", (20, 80), 
-                    cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
-        cv2.putText(frame, f"{state_text}", (20, 200), 
-                    cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
 
         # increase frame_count, reset if large
         frame_count += 1
@@ -162,7 +151,7 @@ def calculate_wca_result(raw_time_str: str, penalty: str) -> str:
     # calculate total number of seconds in the time
     time_parts = raw_time_str.split(":")
     total_seconds = 0
-    if len(time_parts == 2):
+    if len(time_parts) == 2:
         total_seconds = int(time_parts[0]) * 60 + float(time_parts[1])
     else:
         total_seconds = float(time_parts[0])
@@ -170,6 +159,9 @@ def calculate_wca_result(raw_time_str: str, penalty: str) -> str:
     # apply +2 penalty if applicable
     if penalty == "+2": 
         total_seconds += 2.0
+
+    # truncate time to 2 decimal places
+    total_seconds = math.trunc(total_seconds * 100) / 100
 
     # format time as M:SS.SS
     if total_seconds >= 60:
@@ -244,7 +236,7 @@ def get_latest_result():
         "raw_time": raw_time,
         "penalty": penalty,
         "final_result": final_result,
-        "cv_status": cv_state["state"]
+        "cv_status": cv_state["state"] # also return state machine status
     }
 
 
