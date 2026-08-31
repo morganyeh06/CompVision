@@ -251,11 +251,17 @@ def save_result(req: SaveResultRequest):
     if req.competitor_name not in leaderboard_df.index:
         leaderboard_df.loc[req.competitor_name] = ""
 
-    # add resilt to leaderboard
+    # add result to leaderboard
     col_name = f"Solve {req.solve_index}"
     leaderboard_df.at[req.competitor_name, col_name] = req.final_time
 
     return {
         "status": "success",
+        "leaderboard": leaderboard_df.to_dict(orient="index")
+    }
+
+@app.get("/leaderboad")
+def get_leaderboard():
+    return {
         "leaderboard": leaderboard_df.to_dict(orient="index")
     }
