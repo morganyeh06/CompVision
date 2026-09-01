@@ -6,9 +6,10 @@ import { useState, useEffect, useRef } from 'react';
 interface Props {
   isCameraOn: boolean
   competitorList: string[] | undefined
+  avgFormat: string | undefined
 }
 
-export default function VideoStream( { isCameraOn, competitorList } : Props) {
+export default function VideoStream( { isCameraOn, competitorList, avgFormat } : Props) {
     const img_src = isCameraOn ? "http://127.0.0.1:8000/video_feed" : Placeholder;
     
     // competitor options 
@@ -18,6 +19,10 @@ export default function VideoStream( { isCameraOn, competitorList } : Props) {
     // track which solve each competitor is on
     const [solveIndices, setSolveIndices] = useState<Record<string, number>>({});
     const currentSolveIndex = currCompetitor !== null ? (solveIndices[currCompetitor] || 1) : -1;
+
+    // max solves per competitor
+    const maxSolves = avgFormat?.toLowerCase() === "mo3" ? 3 : 5;
+    const isFinished = currentSolveIndex > maxSolves;
 
     // result variables
     const [time, setTime] = useState<string | null>(null);
@@ -73,7 +78,7 @@ export default function VideoStream( { isCameraOn, competitorList } : Props) {
       }
 
       // save result if in cooldown, result hasn't been saved yet, and a valid competitor is selected
-      if (isCooldown && !hasSavedRef.current && currCompetitor !== "placeholder") {
+      if (isCooldown && !hasSavedRef.current && currCompetitor !== "placeholder" && !isFinished) {
 
         // saveToLeaderboard() sends the recorded result to the backend endpoint
         async function saveToLeaderboard() {
@@ -114,15 +119,17 @@ export default function VideoStream( { isCameraOn, competitorList } : Props) {
         
         saveToLeaderboard();
       }
-    }, [cvStatus, result, currCompetitor, currentSolveIndex])
+    }, [cvStatus, result, currCompetitor, currentSolveIndex, isFinished])
 
     return (<>
         <div className="video-stream">
           <Dropdown name='curr-competitor' id='curr-competitor' text='Current Competitor' options={options} direction='row' isDisabled={!isCameraOn} setState={setCurrCompetitor}></Dropdown>
-          <div>Solve: {currentSolveIndex}</div>
+          <div>Solve {isFinished ? maxSolves : currentSolveIndex} / {maxSolves}</div>
           <img src={img_src} alt="Live Camera Feed" className="live-feed"></img>
           <div className="result-container">
-            {cvStatus?.includes("CAPTURING") ? (
+            {isFinished? (
+              <div className='result-text'>Finished</div>
+            ) : cvStatus?.includes("CAPTURING") ? (
               <div className='result-text'>Capturing Time...</div>
             ) : (
               <>

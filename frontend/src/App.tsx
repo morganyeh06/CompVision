@@ -19,7 +19,7 @@ function App() {
       <Banner/>
       <div className="top-section">
         <Panel isRunning={isRunning} setIsRunning={setIsRunning} saveSettings={handleSettingsSaved}></Panel>
-        <VideoStream isCameraOn={isRunning} competitorList={currentSettings?.competitors}></VideoStream>
+        <VideoStream isCameraOn={isRunning} competitorList={currentSettings?.competitors} avgFormat={currentSettings?.avg_format}></VideoStream>
       </div>
       
     </>
