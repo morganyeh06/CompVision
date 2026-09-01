@@ -253,15 +253,15 @@ def save_result(req: SaveResultRequest):
 
     # add result to leaderboard
     col_name = f"Solve {req.solve_index}"
-    leaderboard_df.at[req.competitor_name, col_name] = req.final_time
+    leaderboard_df.at[req.competitor_name, col_name] = req.final_result
 
     return {
         "status": "success",
-        "leaderboard": leaderboard_df.to_dict(orient="index")
+        "leaderboard": leaderboard_df.fillna("").to_dict(orient="index")
     }
 
-@app.get("/leaderboad")
+@app.get("/leaderboard")
 def get_leaderboard():
     return {
-        "leaderboard": leaderboard_df.to_dict(orient="index")
+        "leaderboard": leaderboard_df.fillna("").to_dict(orient="index")
     }

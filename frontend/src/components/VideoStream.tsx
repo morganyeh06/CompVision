@@ -1,7 +1,7 @@
 import './VideoStream.css'
 import Placeholder from '../assets/placeholder.jpg';
 import Dropdown from './Dropdown';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 interface Props {
   isCameraOn: boolean
@@ -13,13 +13,26 @@ export default function VideoStream( { isCameraOn, competitorList } : Props) {
     
     // competitor options 
     const options = (isCameraOn && competitorList != null) ? competitorList : ["Select a competitor"];
-    const [currCompetitor, setCurrCompetitor] = useState<string | null>((isCameraOn && competitorList != null) ? options[0] : null);
+    const [currCompetitor, setCurrCompetitor] = useState<string>((isCameraOn && competitorList != null) ? options[0] : "placeholder");
+
+    // track which solve each competitor is on
+    const [solveIndices, setSolveIndices] = useState<Record<string, number>>({});
+    const currentSolveIndex = currCompetitor !== null ? (solveIndices[currCompetitor] || 1) : -1;
 
     // result variables
     const [time, setTime] = useState<string | null>(null);
     const [penalty, setPenalty] = useState<string | null>(null);
     const [result, setResult] = useState<string | null>(null);
     const [cvStatus, setCvStatus] = useState<string | null>(null);
+
+    useEffect(() => {
+      if (competitorList && competitorList.length > 0 && currCompetitor === "placeholder") {
+        setCurrCompetitor(competitorList[0]);
+      }
+    }, [competitorList, currCompetitor]);
+
+    // guard to check if result has already been saved
+    const hasSavedRef = useRef<boolean>(false);
 
     useEffect(() => {
       if (!isCameraOn) return;
@@ -48,9 +61,65 @@ export default function VideoStream( { isCameraOn, competitorList } : Props) {
 
     }, [isCameraOn]);
 
+
+    // save result to leaderboard
+    useEffect(() => {
+      const isCooldown = cvStatus?.includes("COOLDOWN");
+  
+      // reset guard if backend moves on to next solve
+      if (!isCooldown) {
+        hasSavedRef.current = false;
+        return;
+      }
+
+      // save result if in cooldown, result hasn't been saved yet, and a valid competitor is selected
+      if (isCooldown && !hasSavedRef.current && currCompetitor !== "placeholder") {
+
+        // saveToLeaderboard() sends the recorded result to the backend endpoint
+        async function saveToLeaderboard() {
+          hasSavedRef.current = true;
+
+          const payload = {
+            competitor_name: currCompetitor,
+            solve_index: currentSolveIndex,
+            final_result: result
+          };
+
+          try {
+            const response = await fetch("http://127.0.0.1:8000/save_result", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json"
+              },
+              body: JSON.stringify(payload)
+            });
+
+            if (response.ok) {
+              console.log(`Saved ${result} for ${currCompetitor} (Solve ${currentSolveIndex})`);
+            
+              // update competitor's solve index in dictionary
+              setSolveIndices(prev => ({
+                ...prev,
+                [currCompetitor]: currentSolveIndex + 1
+              }));
+            } else {
+              console.error("Server rejected the save request.");
+              hasSavedRef.current = false;
+            }
+          } catch (error) {
+            console.log("Failed to save result to leaderboard:", error);
+            hasSavedRef.current = false;
+          }
+        }
+        
+        saveToLeaderboard();
+      }
+    }, [cvStatus, result, currCompetitor, currentSolveIndex])
+
     return (<>
         <div className="video-stream">
           <Dropdown name='curr-competitor' id='curr-competitor' text='Current Competitor' options={options} direction='row' isDisabled={!isCameraOn} setState={setCurrCompetitor}></Dropdown>
+          <div>Solve: {currentSolveIndex}</div>
           <img src={img_src} alt="Live Camera Feed" className="live-feed"></img>
           <div className="result-container">
             {cvStatus?.includes("CAPTURING") ? (
