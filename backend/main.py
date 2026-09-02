@@ -65,6 +65,11 @@ class SaveResultRequest(BaseModel):
     solve_index: int
     final_result: str
 
+class editResultRequest(BaseModel):
+    competitor_name: str
+    solve_index: int
+    new_time: str
+
 
 # --------------------
 # HELPER FUNCTIONS
@@ -147,7 +152,7 @@ def parse_wca_time(time_str: str):
     """
     if not time_str:
         return None
-    if time_str == "DNF":
+    if time_str.upper() == "DNF":
         return float('inf')
     
     parts = time_str.split(':')
@@ -391,3 +396,27 @@ def get_leaderboard():
         })
 
     return { "leaderboard": final_leaderboard }
+
+
+@app.post("/edit_result")
+def edit_result(req: editResultRequest):
+    global leaderboard_df
+
+    # ensure competitor is on leaderboard
+    if req.competitor_name not in leaderboard_df.index:
+        return {
+            "status": "error",
+            "message": "Competitor not found"
+        }
+
+    # only update if new time is not ""
+    if req.new_time.strip():
+        new_time_float = parse_wca_time(req.new_time)
+        new_time_str = format_wca_time(new_time_float)
+        col_name = f"Solve {req.solve_index}"
+        leaderboard_df.at[req.competitor_name, col_name] = new_time_str
+
+    return {
+        "status": "success",
+        "message": "Result updated"
+    }
