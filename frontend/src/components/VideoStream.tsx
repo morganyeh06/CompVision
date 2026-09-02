@@ -126,13 +126,14 @@ export default function VideoStream( { isCameraOn, competitorList, avgFormat } :
 
     return (<>
         <div className="video-stream">
-          <Dropdown name='curr-competitor' id='curr-competitor' text='Current Competitor' options={options} direction='row' isDisabled={!isCameraOn} setState={setCurrCompetitor}></Dropdown>
-          <div>Solve {isFinished ? maxSolves : currentSolveIndex} / {maxSolves}</div>
+          <div className="competitor-row">
+            <Dropdown name='curr-competitor' id='curr-competitor' text='Current Competitor' options={options} direction='row' isDisabled={!isCameraOn} setState={setCurrCompetitor}></Dropdown>
+            <div className="solve-text">{isFinished ? "Finished" : `Solve ${currentSolveIndex} / ${maxSolves}`}</div>
+          </div>
+          
           <img src={img_src} alt="Live Camera Feed" className="live-feed"></img>
           <div className="result-container">
-            {isFinished? (
-              <div className='result-text'>Finished</div>
-            ) : cvStatus?.includes("CAPTURING") ? (
+            {cvStatus?.includes("CAPTURING") ? (
               <div className='result-text'>Capturing Time...</div>
             ) : (
               <>

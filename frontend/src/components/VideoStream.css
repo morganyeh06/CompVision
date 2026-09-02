@@ -15,6 +15,17 @@
     height: auto;
 }
 
+.competitor-row {
+    width: 100%;
+    display: flex;
+}
+
+.solve-text {
+    white-space: nowrap;
+    margin: auto;
+    font-weight: 600;
+}
+
 .result-container {
     display: flex;
     margin-top: auto;

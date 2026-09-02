@@ -7,13 +7,12 @@
 .field-row {
   display: flex !important;
   flex-direction: row !important;
-  justify-content: center !important; 
   align-items: center !important;
   gap: 15px !important; 
-  width: 100%;
 
   margin-top: 15px;
   margin-bottom: 15px;
+  margin-left: 10px;
 }
 
 .field-row .form-select {
