@@ -235,13 +235,21 @@ def save_settings(settings: CompetitionSettings):
     num_solves = 5 if settings.avg_format.lower() == "ao5" else 3
     columns = [f"Solve {i+1}" for i in range(num_solves)]
 
-    # create dataframe indexed by competitor names
-    leaderboard_df = pd.DataFrame(index=settings.competitors, columns=columns)
+    if leaderboard_df.empty:
+        # initialize new leaderboard
+        leaderboard_df = pd.DataFrame(index=settings.competitors, columns=columns)
+    else:
+        # update leaderboard rows: add/remove competitors as needed
+        leaderboard_df = leaderboard_df.reindex(
+            index=settings.competitors,
+            columns=columns
+        ).fillna("")
 
     return {
         "status": "success",
         "message": "Settings applied and leaderboard created."
     }
+
 
 @app.get("/settings")
 def get_current_settings():
