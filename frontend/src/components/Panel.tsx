@@ -95,7 +95,7 @@ export default function Panel( {isRunning, setIsRunning, saveSettings} : Props )
     }
 
     return(<>
-        <div className="panel">
+        <div className="panel shadow">
             <div className='config'>
                 <div className='input-group'>
                     <label className="input-label" htmlFor='comp-name'>Competition Name</label>
