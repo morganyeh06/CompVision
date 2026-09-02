@@ -400,6 +400,9 @@ def get_leaderboard():
 
 @app.post("/edit_result")
 def edit_result(req: editResultRequest):
+    """
+    Saves edited result to the leaderboard
+    """
     global leaderboard_df
 
     # ensure competitor is on leaderboard
@@ -409,12 +412,16 @@ def edit_result(req: editResultRequest):
             "message": "Competitor not found"
         }
 
-    # only update if new time is not ""
+    # update time
+    new_time_str = ""
     if req.new_time.strip():
         new_time_float = parse_wca_time(req.new_time)
         new_time_str = format_wca_time(new_time_float)
-        col_name = f"Solve {req.solve_index}"
-        leaderboard_df.at[req.competitor_name, col_name] = new_time_str
+    else:
+        new_time_str = req.new_time.strip()
+
+    col_name = f"Solve {req.solve_index}"
+    leaderboard_df.at[req.competitor_name, col_name] = new_time_str
 
     return {
         "status": "success",
