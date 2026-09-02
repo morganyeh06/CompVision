@@ -4,17 +4,22 @@ import Dropdown from './Dropdown';
 import { useState, useEffect, useRef } from 'react';
 
 interface Props {
-  isCameraOn: boolean
+  isRunning: boolean
   competitorList: string[] | undefined
   avgFormat: string | undefined
 }
 
-export default function VideoStream( { isCameraOn, competitorList, avgFormat } : Props) {
-    const img_src = isCameraOn ? "http://127.0.0.1:8000/video_feed" : Placeholder;
+interface CompetitorData {
+  name: string;
+  solves: string[];
+}
+
+export default function VideoStream( { isRunning, competitorList, avgFormat } : Props) {
+    const img_src = isRunning ? "http://127.0.0.1:8000/video_feed" : Placeholder;
     
     // competitor options 
-    const options = (isCameraOn && competitorList != null) ? competitorList : ["Select a competitor"];
-    const [currCompetitor, setCurrCompetitor] = useState<string>((isCameraOn && competitorList != null) ? options[0] : "placeholder");
+    const options = (isRunning && competitorList != null) ? competitorList : ["Select a competitor"];
+    const [currCompetitor, setCurrCompetitor] = useState<string>((isRunning && competitorList != null) ? options[0] : "placeholder");
 
     // track which solve each competitor is on
     const [solveIndices, setSolveIndices] = useState<Record<string, number>>({});
@@ -40,7 +45,7 @@ export default function VideoStream( { isCameraOn, competitorList, avgFormat } :
     const hasSavedRef = useRef<boolean>(false);
 
     useEffect(() => {
-      if (!isCameraOn) return;
+      if (!isRunning) return;
 
       // fetchResult() gets data from the /latest_result endpoint and updates state values
       async function fetchResult() {
@@ -67,7 +72,7 @@ export default function VideoStream( { isCameraOn, competitorList, avgFormat } :
       }
       
 
-    }, [isCameraOn, isFinished]);
+    }, [isRunning, isFinished]);
 
 
     // save result to leaderboard
