@@ -144,7 +144,23 @@ export default function VideoStream( { isRunning, competitorList, avgFormat } : 
         
         saveToLeaderboard();
       }
-    }, [cvStatus, result, currCompetitor, currentSolveIndex, isFinished])
+    }, [cvStatus, result, currCompetitor, currentSolveIndex, isFinished]);
+
+    // reset time, penalty, result when competitor changes
+    useEffect(() => {
+      setTime(null);
+      setPenalty(null);
+      setResult(null);
+
+      if (currCompetitor !== "placeholder") {
+        try {
+          fetch("http://127.0.0.1:8000/reset_cv", { "method": "POST"})
+        } catch(error) {
+          console.error("Failed to reset backend CV state: ", error)
+        }
+      }
+    }, [currCompetitor]);
+
 
     return (<>
         <div className="video-stream">

@@ -276,6 +276,20 @@ def get_latest_result():
     }
 
 
+@app.post("/reset_cv")
+def reset_cv(): 
+    """
+    Resets the current CV engine values
+    """
+    global cv_state
+
+    cv_state["time"] = None
+    cv_state["penalty"] = None
+    cv_state["state"] = "State.SEARCHING"
+
+    return { "status": "cv reset" }
+
+
 @app.post("/save_result")
 def save_result(req: SaveResultRequest):
     """
