@@ -26,7 +26,7 @@
 .leaderboard td:first-child,
 .leaderboard th:last-child,
 .leaderboard td:last-child {
-  padding-right: 15px !important; 
+    padding-right: 15px !important; 
 }
 
 .name-col {
@@ -47,5 +47,18 @@
 }
 
 .solve-cell:hover .edit-icon { 
+    display: inline-block; 
+}
+
+.solve-cell .add-icon { 
+    display: none; 
+    position: absolute;
+    right: 8px; 
+    top: 50%; 
+    transform: translateY(-50%);
+    z-index: 1;
+}
+
+.solve-cell:hover .add-icon { 
     display: inline-block; 
 }

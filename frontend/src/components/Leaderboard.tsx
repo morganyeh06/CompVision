@@ -1,6 +1,7 @@
 import './Leaderboard.css';
 import { useState, useEffect } from 'react';
 import Edit from '../assets/edit-light.svg';
+import Add from '../assets/add-light.svg';
 
 interface CompetitorResult {
     rank: number | string;
@@ -144,9 +145,16 @@ export default function Leaderboard({ avgFormat, event, round }: Props) {
                         ) : (
                           <>
                             {solve}
-                            <span className="edit-icon">
-                              <img src={Edit}></img>
-                            </span>
+                            {solve.trim() === "" ? (
+                              <span className="add-icon">
+                                <img src={Add}></img>
+                              </span>
+                            ) : (
+                              <span className="edit-icon">
+                                <img src={Edit}></img>
+                              </span>
+                            )}
+                            
                           </>
                         )}
                       </td>
