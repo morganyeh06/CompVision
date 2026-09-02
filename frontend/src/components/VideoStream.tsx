@@ -21,12 +21,25 @@ export default function VideoStream( { isRunning, competitorList, avgFormat } : 
     const options = (isRunning && competitorList != null) ? competitorList : ["Select a competitor"];
     const [currCompetitor, setCurrCompetitor] = useState<string>((isRunning && competitorList != null) ? options[0] : "placeholder");
 
-    // track which solve each competitor is on
-    const [solveIndices, setSolveIndices] = useState<Record<string, number>>({});
-    const currentSolveIndex = currCompetitor !== null ? (solveIndices[currCompetitor] || 1) : -1;
+    // track each competitors' solves
+    const [leaderboardData, setLeaderboardData] = useState<CompetitorData[]>([]);
 
     // max solves per competitor
     const maxSolves = avgFormat?.toLowerCase() === "mo3" ? 3 : 5;
+
+    // current solve index is always leftmost empty index
+    let currentSolveIndex = 1;
+    if (currCompetitor !== "placeholder") {
+      // get data for current competitor
+      const compData = leaderboardData.find(c => c.name === currCompetitor);
+
+      if (compData && compData.solves) {
+        // find leftmost empty index
+        const emptyIndex = compData.solves.findIndex(s => s === "");
+        currentSolveIndex = (emptyIndex !== -1) ? emptyIndex + 1 : maxSolves + 1;
+      }
+    }
+
     const isFinished = currentSolveIndex > maxSolves;
 
     // result variables
@@ -47,17 +60,27 @@ export default function VideoStream( { isRunning, competitorList, avgFormat } : 
     useEffect(() => {
       if (!isRunning) return;
 
-      // fetchResult() gets data from the /latest_result endpoint and updates state values
+      // fetchResult() gets data from the /latest_result and /leaderboard endpoints
       async function fetchResult() {
         try {
-          const response = await fetch("http://127.0.0.1:8000/latest_result");
-          if (response.ok) {
-            const data = await response.json();
+          // simultaneously fetch data from both endpoints
+          const [cvRes, boardRes] = await Promise.all([
+            fetch("http://127.0.0.1:8000/latest_result"),
+            fetch("http://127.0.0.1:8000/leaderboard")
+          ]);
+
+          if (cvRes.ok) {
+            const data = await cvRes.json();
 
             setTime(data["raw_time"]);
             setResult(data["final_result"]);
             setCvStatus(data["cv_status"]);
             setPenalty(data["penalty"]);
+          }
+
+          if (boardRes.ok) {
+            const boardData = await boardRes.json();
+            setLeaderboardData(boardData.leaderboard);
           }
         } catch (error) {
           console.error("Error fetching live results:", error);
@@ -109,12 +132,6 @@ export default function VideoStream( { isRunning, competitorList, avgFormat } : 
 
             if (response.ok) {
               console.log(`Saved ${result} for ${currCompetitor} (Solve ${currentSolveIndex})`);
-            
-              // update competitor's solve index in dictionary
-              setSolveIndices(prev => ({
-                ...prev,
-                [currCompetitor]: currentSolveIndex + 1
-              }));
             } else {
               console.error("Server rejected the save request.");
               hasSavedRef.current = false;
@@ -132,7 +149,7 @@ export default function VideoStream( { isRunning, competitorList, avgFormat } : 
     return (<>
         <div className="video-stream">
           <div className="competitor-row">
-            <Dropdown name='curr-competitor' id='curr-competitor' text='Current Competitor' options={options} direction='row' isDisabled={!isCameraOn} setState={setCurrCompetitor}></Dropdown>
+            <Dropdown name='curr-competitor' id='curr-competitor' text='Current Competitor' options={options} direction='row' isDisabled={!isRunning} setState={setCurrCompetitor}></Dropdown>
             <div className="solve-text">{isFinished ? "Finished" : `Solve ${currentSolveIndex} / ${maxSolves}`}</div>
           </div>
           
