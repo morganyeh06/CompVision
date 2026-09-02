@@ -4,6 +4,7 @@ import Banner from './components/Banner.tsx'
 import Panel from './components/Panel.tsx'
 import { type CompSettings } from './components/Panel.tsx';
 import VideoStream from './components/VideoStream.tsx'
+import Leaderboard from './components/Leaderboard.tsx';
 
 function App() {
   // app states
@@ -21,7 +22,9 @@ function App() {
         <Panel isRunning={isRunning} setIsRunning={setIsRunning} saveSettings={handleSettingsSaved}></Panel>
         <VideoStream isCameraOn={isRunning} competitorList={currentSettings?.competitors} avgFormat={currentSettings?.avg_format}></VideoStream>
       </div>
-      
+      {isRunning ?
+        <Leaderboard avgFormat={currentSettings?.avg_format} event={currentSettings?.event} round={currentSettings?.round_number}></Leaderboard>
+      : null}
     </>
   )
 };
