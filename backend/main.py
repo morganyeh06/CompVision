@@ -367,13 +367,24 @@ def get_leaderboard():
 
     results.sort(key=sort_key)
 
-    # assign rank numbers
+    final_leaderboard = []
     curr_rank = 1
     for entry in results:
+        # assign rank
         if entry["is_finished"]:
             entry["rank"] = curr_rank
             curr_rank += 1
         else:
-            curr_rank = ""
+            entry["rank"] = ""
 
-    return { "leaderboard": results }
+        # clean data
+        final_leaderboard.append({
+            "rank": entry["rank"],
+            "name": entry["name"],
+            "solves": entry["solves"],
+            "best": entry["best"],
+            "average": entry["average"],
+            "is_finished": entry["is_finished"]
+        })
+
+    return { "leaderboard": final_leaderboard }
