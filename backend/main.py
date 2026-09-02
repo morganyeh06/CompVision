@@ -141,6 +141,43 @@ def generate_frames():
                b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
 
 
+def parse_wca_time(time_str: str):
+    """
+    Converts WCA time string to seconds
+    """
+    if not time_str:
+        return None
+    if time_str == "DNF":
+        return float('inf')
+    
+    parts = time_str.split(':')
+    total_seconds = 0
+    if len(parts) == 2:
+        total_seconds = int(parts[0]) * 60 + float(parts[1])
+    else:
+        total_seconds = float(parts[0])
+
+    # truncate time to 2 decimal places
+    total_seconds = math.trunc(total_seconds * 100) / 100
+    return total_seconds
+
+
+def format_wca_time(time_float: float):
+    """
+    Converts numerical time to WCA string format
+    """
+    if time_float is None:
+        return ""
+    elif time_float == float('inf'):
+        return "DNF"
+    elif time_float >= 60:
+        mins = int(time_float // 60)
+        secs = time_float % 60
+        return f"{mins}:{secs:05.2f}"
+    else:
+        return f"{time_float:.2f}"
+
+
 def calculate_wca_result(raw_time_str: str, penalty: str) -> str:
     """
     Processes raw time string, applies penalty, then formats as WCA time
@@ -163,13 +200,7 @@ def calculate_wca_result(raw_time_str: str, penalty: str) -> str:
     # truncate time to 2 decimal places
     total_seconds = math.trunc(total_seconds * 100) / 100
 
-    # format time as M:SS.SS
-    if total_seconds >= 60:
-        mins = int(total_seconds // 60)
-        secs = total_seconds % 60
-        return f"{mins}:{secs:05.2f}"
-    else:
-        return f"{total_seconds:.2f}"
+    return format_wca_time(total_seconds)
     
 
 # --------------------
@@ -260,8 +291,89 @@ def save_result(req: SaveResultRequest):
         "leaderboard": leaderboard_df.fillna("").to_dict(orient="index")
     }
 
+
 @app.get("/leaderboard")
 def get_leaderboard():
-    return {
-        "leaderboard": leaderboard_df.fillna("").to_dict(orient="index")
-    }
+    """
+    Returns live leaderboard with calculated averages and ranks
+    """
+    global leaderboard_df, app_settings
+
+    if leaderboard_df.empty:
+        return { "leaderboard": [] }
+
+
+    fmt = app_settings.get("avg_format", "ao5").lower()
+    event = app_settings.get("event", "3x3")
+    num_solves = 3 if fmt == "mo3" else 5
+
+    results = []
+
+    # process each competitor's results
+    for name, row in leaderboard_df.iterrows():
+        # check for NaN values
+        raw_solves = [row.get(f"Solve {i+1}", "") for i in range(num_solves)]
+        raw_solves = [s if pd.notna(s) else "" for s in raw_solves]
+
+        # parse and validate solves
+        parsed_solves = [parse_wca_time(s) for s in raw_solves]
+        valid_solves = [s for s in parsed_solves if s is not None]
+
+        is_finished = len(valid_solves) == num_solves
+
+        # get fastest single and calculate average if competitor is finished
+        best = min(valid_solves) if valid_solves else None
+        avg = None
+        if is_finished:
+            if fmt == "ao5":
+                dnf_count = parsed_solves.count(float('inf'))
+                # average is DNF if there is > 1 DNF
+                if dnf_count > 1:
+                    avg = float('inf')
+                else:
+                    # drop fastest and slowest solves, then calculate mean of middle three
+                    sorted_solves = sorted(parsed_solves)
+                    avg = sum(sorted_solves[1:4]) / 3
+
+            elif fmt == "mo3":
+                # mean is DNF if one resultis DNF
+                if float('inf') in parsed_solves:
+                    avg = float('inf')
+                else:
+                    avg = sum(parsed_solves) / 3
+
+        # record results
+        results.append({
+            "name": name,
+            "solves": raw_solves,
+            "best_raw": best,
+            "avg_raw": avg,
+            "best": format_wca_time(best),
+            "average": format_wca_time(avg),
+            "is_finished": is_finished
+        })
+
+    # sort leaderboard
+    def sort_key(r):
+        # competitors not finished yet go to bottom of leaderboard
+        if not r["is_finished"]:
+            return (1, 0, 0)
+
+        # rank by single for 3BLD, rank by average for all other events
+        primary = r["best_raw"] if event == "3BLD" else r["avg_raw"]
+        secondary = r["avg_raw"] if event == "3BLD" else r["best_raw"] # tiebreaker
+
+        return (0, primary, secondary)
+
+    results.sort(key=sort_key)
+
+    # assign rank numbers
+    curr_rank = 1
+    for entry in results:
+        if entry["is_finished"]:
+            entry["rank"] = curr_rank
+            curr_rank += 1
+        else:
+            curr_rank = ""
+
+    return { "leaderboard": results }
