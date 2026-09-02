@@ -60,11 +60,14 @@ export default function VideoStream( { isCameraOn, competitorList, avgFormat } :
       }
 
       // fetch result every 500ms
-      fetchResult();
-      const intervalId = setInterval(fetchResult, 200);
-      return () => clearInterval(intervalId)
+      if (!isFinished) {
+        fetchResult();
+        const intervalId = setInterval(fetchResult, 200);
+        return () => clearInterval(intervalId)
+      }
+      
 
-    }, [isCameraOn]);
+    }, [isCameraOn, isFinished]);
 
 
     // save result to leaderboard
