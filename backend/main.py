@@ -193,12 +193,12 @@ def calculate_wca_result(raw_time_str: str, penalty: str) -> str:
     else:
         total_seconds = float(time_parts[0])
 
-    # apply +2 penalty if applicable
-    if penalty == "+2": 
-        total_seconds += 2.0
-
     # truncate time to 2 decimal places
     total_seconds = math.trunc(total_seconds * 100) / 100
+
+    # apply +2 penalty if applicable
+    if penalty == "+2": 
+        total_seconds += 2.00
 
     return format_wca_time(total_seconds)
     
@@ -341,6 +341,9 @@ def get_leaderboard():
                     avg = float('inf')
                 else:
                     avg = sum(parsed_solves) / 3
+
+        if avg and avg != float('inf'):
+            avg = math.trunc(avg * 100) / 100
 
         # record results
         results.append({

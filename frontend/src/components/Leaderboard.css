@@ -1,0 +1,34 @@
+.leaderboard {
+    margin-left: 20px;
+    margin-right: 20px;
+    margin-top: 50px;
+    margin-bottom: 50px;
+}
+
+.leaderboard-title {
+    text-align: left;
+    font-weight: 600
+}
+
+.table {
+    table-layout: fixed;
+}
+
+.rank-col {
+    width: 50px;
+}
+
+.time-col {
+    width: 10%;
+}
+
+.rank-col, 
+.leaderboard td:first-child,
+.leaderboard th:last-child,
+.leaderboard td:last-child {
+  padding-right: 15px !important; 
+}
+
+.name-col {
+    padding-left: 15px !important;
+}

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import './Leaderboard.css';
 
 interface CompetitorResult {
     rank: number | string;
@@ -41,21 +42,21 @@ export default function Leaderboard({ avgFormat, event, round }: Props) {
     }, []);
 
     return (
-    <div className="mt-4">
-      <h3 className="mb-3">{event} - Round {round}</h3>
+    <div className="leaderboard">
+      <h5 className="leaderboard-title">{event} - Round {round}</h5>
       
-      <div className="table-responsive shadow-sm rounded">
-        <table className="table table-bordered table-hover mb-0 text-center align-middle" style={{ backgroundColor: 'white' }}>
+      <div className="shadow-sm">
+        <table className="table">
           <thead className="table-light text-muted">
             <tr>
-              <th style={{ width: '50px' }}>#</th>
-              <th className="text-start">Name</th>
+              <th className="rank-col text-end">#</th>
+              <th className="name-col text-start">Name</th>
               {/* create solve number columns */}
               {Array.from({ length: numSolves }, (_, i) => (
-                <th key={i}>{i + 1}</th>
+                <th className="time-col text-end" key={i}>{i + 1}</th>
               ))}
-              <th>{avgColName}</th>
-              <th>Best</th>
+              <th className="time-col text-end">{avgColName}</th>
+              <th className="time-col text-end">Best</th>
             </tr>
           </thead>
           
@@ -63,21 +64,21 @@ export default function Leaderboard({ avgFormat, event, round }: Props) {
             {leaderboard.map((comp, idx) => {
               // green for finished, yellow for ongoing
               const rowStyle = comp.is_finished 
-                ? { backgroundColor: '#00d65f', color: 'black', fontWeight: 'bold' } 
+                ? { backgroundColor: '#00d65f', color: 'black' } 
                 : { backgroundColor: '#ffd500', color: 'black' };
 
               return (
                 <tr key={idx}>
-                  <td style={rowStyle}>{comp.rank}</td>
-                  <td className="text-start fw-medium">{comp.name}</td>
+                  <td className="text-end" style={rowStyle}>{comp.rank}</td>
+                  <td className="name-col text-start">{comp.name}</td>
                   
                   {/* get solves */}
                   {comp.solves.map((solve, sIdx) => (
-                    <td key={sIdx}>{solve}</td>
+                    <td className="text-end" key={sIdx}>{solve}</td>
                   ))}
                   
-                  <td className="fw-bold">{comp.average}</td>
-                  <td>{comp.best}</td>
+                  <td className="text-end">{comp.average}</td>
+                  <td className="text-end">{comp.best}</td>
                 </tr>
               );
             })}
