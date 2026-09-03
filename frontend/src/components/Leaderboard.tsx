@@ -1,7 +1,9 @@
 import './Leaderboard.css';
 import { useState, useEffect } from 'react';
-import Edit from '../assets/edit-light.svg';
-import Add from '../assets/add-light.svg';
+import EditBlack from '../assets/edit-black.svg';
+import EditWhite from '../assets/edit-white.svg';
+import AddBlack from '../assets/plus-black.svg';
+import AddWhite from '../assets/plus-white.svg';
 
 interface CompetitorResult {
     rank: number | string;
@@ -33,11 +35,15 @@ export default function Leaderboard({ avgFormat, event, round }: Props) {
     const [editingCell, setEditingCell] = useState<EditState | null>(null);
     const [editValue, setEditValue] = useState<string>("");
 
+    const currentAppTheme = document.documentElement.getAttribute('data-bs-theme');
+    const editIcon = currentAppTheme === 'light' ? EditBlack : EditWhite;
+    const addIcon = currentAppTheme === 'light' ? AddBlack : AddWhite;
+
     useEffect(() => {
       // fetchLeaderboard() returns the current leaderboard from the backend endpoint
       async function fetchLeaderboard() {
         try {
-          const response = await fetch("http://127.0.0.1:8000/leaderboard");
+          const response = await fetch("http://127.0.0.1:8000/leaderboard", { cache: 'no-store' });
             if (response.ok) {
               const data = await response.json();
               setLeaderboard(data.leaderboard);
@@ -66,7 +72,7 @@ export default function Leaderboard({ avgFormat, event, round }: Props) {
 
     // handleSaveEdit() saves the edited cell and sends value to backend
     async function handleSaveEdit() {
-      if(!setEditingCell) return;
+      if(!editingCell) return;
 
       const payload = {
         competitor_name: editingCell?.name,
@@ -96,7 +102,7 @@ export default function Leaderboard({ avgFormat, event, round }: Props) {
       
       <div className="shadow-sm">
         <table className="table">
-          <thead className="table-light text-muted">
+          <thead className="table text-muted">
             <tr>
               <th className="rank-col text-end">#</th>
               <th className="name-col text-start">Name</th>
@@ -147,11 +153,11 @@ export default function Leaderboard({ avgFormat, event, round }: Props) {
                             {solve}
                             {solve.trim() === "" ? (
                               <span className="add-icon">
-                                <img src={Add}></img>
+                                <img src={addIcon}></img>
                               </span>
                             ) : (
                               <span className="edit-icon">
-                                <img src={Edit}></img>
+                                <img src={editIcon}></img>
                               </span>
                             )}
                             
