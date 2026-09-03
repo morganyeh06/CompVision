@@ -15,7 +15,7 @@ interface CompetitorData {
 }
 
 export default function VideoStream( { isRunning, competitorList, avgFormat } : Props) {
-    const img_src = isRunning ? "http://127.0.0.1:8000/video_feed" : Placeholder;
+    const img_src = "http://127.0.0.1:8000/video_feed";
     
     // competitor options 
     const options = (isRunning && competitorList != null) ? competitorList : ["Select a competitor"];
@@ -29,7 +29,7 @@ export default function VideoStream( { isRunning, competitorList, avgFormat } : 
 
     // current solve index is always leftmost empty index
     let currentSolveIndex = 1;
-    if (currCompetitor !== "placeholder") {
+    if (isRunning && currCompetitor !== "placeholder") {
       // get data for current competitor
       const compData = leaderboardData.find(c => c.name === currCompetitor);
 
@@ -40,7 +40,7 @@ export default function VideoStream( { isRunning, competitorList, avgFormat } : 
       }
     }
 
-    const isFinished = currentSolveIndex > maxSolves;
+    const isFinished = isRunning && currentSolveIndex > maxSolves;
 
     // result variables
     const [time, setTime] = useState<string | null>(null);
@@ -88,14 +88,11 @@ export default function VideoStream( { isRunning, competitorList, avgFormat } : 
       }
 
       // fetch result every 500ms
-      if (!isFinished) {
-        fetchResult();
-        const intervalId = setInterval(fetchResult, 200);
-        return () => clearInterval(intervalId)
-      }
-      
+      fetchResult();
+      const intervalId = setInterval(fetchResult, 200);
+      return () => clearInterval(intervalId)
 
-    }, [isRunning, isFinished, maxSolves, currCompetitor]);
+    }, [isRunning, currCompetitor]);
 
 
     // save result to leaderboard
