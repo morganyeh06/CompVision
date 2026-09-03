@@ -5,6 +5,14 @@
     margin-bottom: 50px;
 }
 
+[data-bs-theme="dark"] th {
+  background-color: #272727;
+}
+
+[data-bs-theme="dark"] td {
+  background-color: #272727;
+}
+
 .leaderboard-title {
     text-align: left;
     font-weight: 600

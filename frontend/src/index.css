@@ -30,6 +30,10 @@
   }
 }
 
+[data-bs-theme="dark"] {
+  --bs-body-bg: #121212;
+}
+
 @media (prefers-color-scheme: dark) {
   :root {
     --text: #9ca3af;

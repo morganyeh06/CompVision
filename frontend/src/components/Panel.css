@@ -3,6 +3,10 @@
     border-radius: 5px;
 }
 
+[data-bs-theme="dark"] .panel {
+  background-color: #272727;
+}
+
 .input-label {
     font-weight: 600;
 }

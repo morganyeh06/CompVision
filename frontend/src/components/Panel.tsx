@@ -102,18 +102,18 @@ export default function Panel( {isRunning, setIsRunning, saveSettings} : Props )
     return(<>
         <div className="panel shadow">
             <div className='config'>
-                <div className='input-group'>
+                <div className='form-group text-start'>
                     <label className="input-label" htmlFor='comp-name'>Competition Name</label>
-                    <input className='input-field' id="comp-name" onChange={(e) => setCompName(e.target.value)}></input>
+                    <input type="text" className='form-control' id="comp-name" onChange={(e) => setCompName(e.target.value)}></input>
                 </div>
                 <div className="config-row">
                     <Dropdown name="events" id="events" text="Event" options={eventOptions} direction='col' isDisabled={false} setState={setEvent}></Dropdown>
                     <NumInput id="round" minVal={1} defaultVal={1} text="Round" setState={setRound}></NumInput>
                     <Dropdown name='formats' id='formats' text='Format' options={avgFormats} direction='col' isDisabled={isRunning} setState={setFormat}></Dropdown>
                 </div>
-                <div className='input-group'>
+                <div className='form-group text-start'>
                     <label className="input-label" htmlFor='competitors'>Competitor List</label>
-                    <textarea id='competitors' onChange={(e) => setCompetitors(e.target.value)}></textarea>
+                    <textarea className="form-control" id='competitors' onChange={(e) => setCompetitors(e.target.value)}></textarea>
                 </div>
             </div>
             <div className="btns">
