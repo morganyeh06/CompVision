@@ -65,8 +65,8 @@ export default function VideoStream( { isRunning, competitorList, avgFormat } : 
         try {
           // simultaneously fetch data from both endpoints
           const [cvRes, boardRes] = await Promise.all([
-            fetch("http://127.0.0.1:8000/latest_result"),
-            fetch("http://127.0.0.1:8000/leaderboard")
+            fetch("http://127.0.0.1:8000/latest_result", { cache: 'no-store' }),
+            fetch("http://127.0.0.1:8000/leaderboard", { cache: 'no-store' })
           ]);
 
           if (cvRes.ok) {
@@ -95,7 +95,7 @@ export default function VideoStream( { isRunning, competitorList, avgFormat } : 
       }
       
 
-    }, [isRunning, isFinished]);
+    }, [isRunning, isFinished, maxSolves, currCompetitor]);
 
 
     // save result to leaderboard
@@ -166,7 +166,7 @@ export default function VideoStream( { isRunning, competitorList, avgFormat } : 
         <div className="video-stream">
           <div className="competitor-row">
             <Dropdown name='curr-competitor' id='curr-competitor' text='Current Competitor' options={options} direction='row' isDisabled={!isRunning} setState={setCurrCompetitor}></Dropdown>
-            <div className="solve-text">{isFinished ? "Finished" : `Solve ${currentSolveIndex} / ${maxSolves}`}</div>
+            <div className="solve-text">{isFinished ? "Finished" : `Solve ${!isRunning ? "-" : currentSolveIndex} / ${maxSolves}`}</div>
           </div>
           
           <img src={img_src} alt="Live Camera Feed" className="live-feed"></img>
