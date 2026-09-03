@@ -5,6 +5,7 @@ import { useState, useEffect, useRef } from 'react';
 
 interface Props {
   isRunning: boolean
+  isBackendReady: boolean
   competitorList: string[] | undefined
   avgFormat: string | undefined
 }
@@ -14,9 +15,7 @@ interface CompetitorData {
   solves: string[];
 }
 
-export default function VideoStream( { isRunning, competitorList, avgFormat } : Props) {
-    const [isBackendReady, setIsBackendReady] = useState<boolean>(false);
-     
+export default function VideoStream( { isRunning, isBackendReady, competitorList, avgFormat } : Props) {
     // competitor options 
     const options = (isRunning && competitorList != null) ? competitorList : ["Select a competitor"];
     const [currCompetitor, setCurrCompetitor] = useState<string>((isRunning && competitorList != null) ? options[0] : "placeholder");
@@ -48,31 +47,7 @@ export default function VideoStream( { isRunning, competitorList, avgFormat } : 
     const [result, setResult] = useState<string | null>(null);
     const [cvStatus, setCvStatus] = useState<string | null>(null);
 
-    // checks if backend is ready
-    useEffect(() => {
-      // checkBackend() checks if the backend has finished booting up
-      async function checkBackend() {
-        try {
-          const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 500);
-
-          const res = await fetch("http://127.0.0.1:8000/backend_status", { 
-            signal: controller.signal,
-            cache: 'no-store' 
-          });
-          
-          clearTimeout(timeoutId);
-          setIsBackendReady(res.ok ? true : false)
-        
-        } catch (error) {
-          setIsBackendReady(false);
-        }
-      }
-
-      checkBackend();
-      const interval = setInterval(checkBackend, 1000);
-      return () => clearInterval(interval)
-    }, []);
+    
 
     const img_src = isBackendReady ? "http://127.0.0.1:8000/video_feed" : Placeholder;
 

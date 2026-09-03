@@ -13,11 +13,12 @@ export interface CompSettings {
 
 interface Props {
     isRunning: boolean;
+    isBackendReady: boolean;
     setIsRunning: (state: boolean) => void;
     saveSettings : (settings: CompSettings) => void;
 }
 
-export default function Panel( {isRunning, setIsRunning, saveSettings} : Props ) {
+export default function Panel( {isRunning, isBackendReady, setIsRunning, saveSettings} : Props ) {
     const eventOptions = ["3x3", "2x2", "4x4", "5x5", "6x6", "7x7", "3x3 OH", "3BLD",
                           "Pyraminx", "Megaminx", "Skewb", "Square-1", "Clock", "FTO"];
     const avgFormats = ["Ao5", "Mo3"];
@@ -121,7 +122,7 @@ export default function Panel( {isRunning, setIsRunning, saveSettings} : Props )
             <div className="btns">
                 {!isRunning ? 
                     <button type="button" className="btn btn-primary" 
-                            id='start-btn' onClick={handleStart} disabled={!(competitors.trim() && compName.trim())}>Start</button> : 
+                            id='start-btn' onClick={handleStart} disabled={!isValid || !isBackendReady}>Start</button> : 
                     <>
                         <button type="button" className="btn btn-secondary" id='save-btn' disabled={!isSaveEnabled} onClick={handleSave}>Save</button>
                         <button type="button" className="btn btn-danger" id='stop-btn' onClick={handleStop}>Reset</button>
