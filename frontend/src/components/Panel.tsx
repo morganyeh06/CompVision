@@ -51,6 +51,8 @@ export default function Panel( {isRunning, setIsRunning, saveSettings} : Props )
     }
 
     async function handleStop() {
+        if (!confirm("Are you sure you want to reset? All competition results will be lost.")) return;
+
         setIsRunning(false);
         try {
           fetch("http://127.0.0.1:8000/reset", { "method": "POST"})
@@ -122,7 +124,7 @@ export default function Panel( {isRunning, setIsRunning, saveSettings} : Props )
                             id='start-btn' onClick={handleStart} disabled={!(competitors.trim() && compName.trim())}>Start</button> : 
                     <>
                         <button type="button" className="btn btn-secondary" id='save-btn' disabled={!isSaveEnabled} onClick={handleSave}>Save</button>
-                        <button type="button" className="btn btn-danger" id='stop-btn' onClick={handleStop}>Stop</button>
+                        <button type="button" className="btn btn-danger" id='stop-btn' onClick={handleStop}>Reset</button>
                     </>}
             </div>
             
