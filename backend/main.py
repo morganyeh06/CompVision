@@ -264,6 +264,19 @@ def get_current_settings():
         "data": app_settings
     }  
 
+@app.post("/reset")
+def reset():
+    global cv_state, leaderboard_df, app_settings
+
+    cv_state = {"time": None, "penalty": None, "state": None}
+    app_settings = {}
+    leaderboard_df = pd.DataFrame()
+
+    return { 
+        "status": "success",
+        "message": "backend reset"
+    }
+
 
 @app.get("/latest_result")
 def get_latest_result():

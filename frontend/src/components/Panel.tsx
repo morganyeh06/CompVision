@@ -44,14 +44,19 @@ export default function Panel( {isRunning, setIsRunning, saveSettings} : Props )
     const isSaveEnabled = (isTextModified && isValid) || isDropdownModified || isNumInputModified ;
 
     
-    // handleClick(action) changes app run state, may change saved input values
-    // Parameters: 
-    //      action (string): one of {start, stop}
-    function handleClick(action: string) {
-        setIsRunning(!isRunning);
+    // handleClick() changes app run state and saves settings
+    function handleStart() {
+        setIsRunning(true);
+        handleSave();
+    }
 
-        // on start set saved values to the current values
-        if(action === "start") handleSave();
+    async function handleStop() {
+        setIsRunning(false);
+        try {
+          fetch("http://127.0.0.1:8000/reset", { "method": "POST"})
+        } catch(error) {
+          console.error("Failed to reset backend state: ", error)
+        }
     }
 
     // handleSave() sets the saved input values
@@ -114,10 +119,10 @@ export default function Panel( {isRunning, setIsRunning, saveSettings} : Props )
             <div className="btns">
                 {!isRunning ? 
                     <button type="button" className="btn btn-primary" 
-                            id='start-btn' onClick={() => {handleClick('start')}} disabled={!(competitors.trim() && compName.trim())}>Start</button> : 
+                            id='start-btn' onClick={handleStart} disabled={!(competitors.trim() && compName.trim())}>Start</button> : 
                     <>
                         <button type="button" className="btn btn-secondary" id='save-btn' disabled={!isSaveEnabled} onClick={handleSave}>Save</button>
-                        <button type="button" className="btn btn-danger" id='stop-btn' onClick={() => {handleClick('stop')}}>Stop</button>
+                        <button type="button" className="btn btn-danger" id='stop-btn' onClick={handleStop}>Stop</button>
                     </>}
             </div>
             
