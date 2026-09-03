@@ -5,33 +5,29 @@ import Moon from '/src/assets/moon.svg';
 
 export default function ThemeSwitch() {
     const [appTheme, setAppTheme] = useState(() => {
-        // get saved theme from local storage, default to light
+        // get saved theme from local storage, default to browser preference
         const t = localStorage.getItem("theme");
-        return t ? t : "light";
+        if (t) return t;
+
+        return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
     });
 
-    // handleChange() updates appTheme and saves to localStorage
-    function handleThemeChange() {
-        var theme = (appTheme === "light") ? "dark" : "light"
-
-        setAppTheme(theme)
-        localStorage.setItem("theme", theme)
+    // toggleTheme() updates appTheme and saves to localStorage
+    function toggleTheme() {
+        setAppTheme((prev) => (prev === 'light' ? 'dark' : 'light'));
     }
 
     // change them whenever appTheme is updated
     useEffect(() => {   
         // change App appearance depending on appTheme
-        if (appTheme === "dark") {
-            document.documentElement.setAttribute('data-theme', 'dark');
-        } else {
-            document.documentElement.setAttribute('data-theme', 'light');
-        }
+        document.documentElement.setAttribute('data-bs-theme', appTheme);
+        localStorage.setItem('theme', appTheme)
     }, [appTheme]);
 
 
     return (<>
         <div className='theme-toggle'>
-            <input type='checkbox' id='theme-switch' checked={appTheme === "dark"} onChange={handleThemeChange}></input>
+            <input type='checkbox' id='theme-switch' checked={appTheme === "dark"} onChange={toggleTheme}></input>
             <label htmlFor='theme-switch'>
                 <img src={appTheme === "dark" ? Moon : Sun} alt={appTheme === "dark" ? "moon" : "sun"} 
                     className="toggle-img" title="Toggle Light/Dark Mode"></img>
