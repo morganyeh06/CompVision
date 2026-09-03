@@ -212,10 +212,18 @@ def calculate_wca_result(raw_time_str: str, penalty: str) -> str:
 # ENDPOINTS
 # --------------------
 
+@app.get("/backend_status")
+def get_backend_status():
+    """
+    Checks if backend is ready
+    """
+    return { "status": "success" }
+
+
 @app.get("/video_feed")
 def video_feed():
     """
-    Endpoint to get live footage from webcam
+    Gets live footage from webcam
     """
     return StreamingResponse(
         generate_frames(),
@@ -266,6 +274,9 @@ def get_current_settings():
 
 @app.post("/reset")
 def reset():
+    """
+    Resets the backend state
+    """
     global cv_state, leaderboard_df, app_settings
 
     cv_state = {"time": None, "penalty": None, "state": None}

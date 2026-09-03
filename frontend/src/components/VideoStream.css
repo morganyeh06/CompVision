@@ -9,6 +9,14 @@
     margin: auto;
 }
 
+.video-container {
+    position: relative;
+}
+
+#loading-icon {
+
+}
+
 .live-feed {
     max-width: 100%;
     height: auto;

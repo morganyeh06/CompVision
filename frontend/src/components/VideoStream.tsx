@@ -15,8 +15,8 @@ interface CompetitorData {
 }
 
 export default function VideoStream( { isRunning, competitorList, avgFormat } : Props) {
-    const img_src = "http://127.0.0.1:8000/video_feed";
-    
+    const [isBackendReady, setIsBackendReady] = useState<boolean>(false);
+     
     // competitor options 
     const options = (isRunning && competitorList != null) ? competitorList : ["Select a competitor"];
     const [currCompetitor, setCurrCompetitor] = useState<string>((isRunning && competitorList != null) ? options[0] : "placeholder");
@@ -47,6 +47,34 @@ export default function VideoStream( { isRunning, competitorList, avgFormat } : 
     const [penalty, setPenalty] = useState<string | null>(null);
     const [result, setResult] = useState<string | null>(null);
     const [cvStatus, setCvStatus] = useState<string | null>(null);
+
+    // checks if backend is ready
+    useEffect(() => {
+      // checkBackend() checks if the backend has finished booting up
+      async function checkBackend() {
+        try {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 500);
+
+          const res = await fetch("http://127.0.0.1:8000/backend_status", { 
+            signal: controller.signal,
+            cache: 'no-store' 
+          });
+          
+          clearTimeout(timeoutId);
+          setIsBackendReady(res.ok ? true : false)
+        
+        } catch (error) {
+          setIsBackendReady(false);
+        }
+      }
+
+      checkBackend();
+      const interval = setInterval(checkBackend, 1000);
+      return () => clearInterval(interval)
+    }, []);
+
+    const img_src = isBackendReady ? "http://127.0.0.1:8000/video_feed" : Placeholder;
 
     useEffect(() => {
       if (competitorList && competitorList.length > 0 && currCompetitor === "placeholder") {
@@ -166,9 +194,21 @@ export default function VideoStream( { isRunning, competitorList, avgFormat } : 
             <div className="solve-text">{isFinished ? "Finished" : `Solve ${!isRunning ? "-" : currentSolveIndex} / ${maxSolves}`}</div>
           </div>
           
-          <img src={img_src} alt="Live Camera Feed" className="live-feed"></img>
+          <div className="video-container">
+            {!isBackendReady ? (
+              <div className="position-absolute top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center">
+                <div className="spinner-border text-light" id="loading-icon" role="status">
+                  <span className="visually-hidden">Loading...</span>
+                </div>
+              </div>
+            ) : null}
+            <img src={img_src} alt="Live Camera Feed" className="live-feed"></img>
+          </div>
+          
           <div className="result-container">
-            {cvStatus?.includes("CAPTURING") ? (
+            {!isBackendReady ? (
+              <div className='result-text'>Starting Camera...</div>
+            ) : cvStatus?.includes("CAPTURING") ? (
               <div className='result-text'>Capturing Time...</div>
             ) : (
               <>
@@ -177,6 +217,8 @@ export default function VideoStream( { isRunning, competitorList, avgFormat } : 
                 <div className='result-text' id='final-result'>Result: {result || "--"}</div>
               </> 
             )}
+
+            
           </div>
         </div>
     </>);
