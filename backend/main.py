@@ -452,8 +452,6 @@ def edit_result(req: editResultRequest):
     if req.new_time.strip():
         new_time_float = parse_wca_time(req.new_time)
         new_time_str = format_wca_time(new_time_float)
-    else:
-        new_time_str = req.new_time.strip()
 
     col_name = f"Solve {req.solve_index}"
     leaderboard_df.at[req.competitor_name, col_name] = new_time_str
