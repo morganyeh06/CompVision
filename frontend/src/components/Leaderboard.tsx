@@ -4,6 +4,8 @@ import EditBlack from '../assets/edit-black.svg';
 import EditWhite from '../assets/edit-white.svg';
 import AddBlack from '../assets/plus-black.svg';
 import AddWhite from '../assets/plus-white.svg';
+import DownloadBlack from '../assets/download-black.svg';
+import DownloadWhite from '../assets/download-white.svg';
 
 interface CompetitorResult {
     rank: number | string;
@@ -35,9 +37,22 @@ export default function Leaderboard({ avgFormat, event, round }: Props) {
     const [editingCell, setEditingCell] = useState<EditState | null>(null);
     const [editValue, setEditValue] = useState<string>("");
 
-    const currentAppTheme = document.documentElement.getAttribute('data-bs-theme');
-    const editIcon = currentAppTheme === 'light' ? EditBlack : EditWhite;
-    const addIcon = currentAppTheme === 'light' ? AddBlack : AddWhite;
+    const [appTheme, setAppTheme] = useState<string>(() => document.documentElement.getAttribute('data-bs-theme') || 'light');
+
+    useEffect(() => {
+      function handleThemeChange() {
+        const current = document.documentElement.getAttribute('data-bs-theme') || 'light';
+        setAppTheme(current);
+      };
+
+      window.addEventListener('themechange', handleThemeChange);
+      return () => window.removeEventListener('themechange', handleThemeChange);
+    }, []);
+
+    const editIcon = appTheme === 'light' ? EditBlack : EditWhite;
+    const addIcon = appTheme === 'light' ? AddBlack : AddWhite;
+    const downloadIcon = appTheme === 'light' ? DownloadBlack : DownloadWhite;
+
 
     useEffect(() => {
       // fetchLeaderboard() returns the current leaderboard from the backend endpoint
@@ -96,9 +111,21 @@ export default function Leaderboard({ avgFormat, event, round }: Props) {
       }
     }
 
+    // handleExportCSV() downloads the current leaderboard as a csv file
+    function handleExportCSV() {
+      window.open("http://127.0.0.1:8000/export_csv", "_blank");
+    }
+
+
     return (
     <div className="leaderboard">
-      <h5 className="leaderboard-title">{event} - Round {round}</h5>
+      <div className="leaderboard-top">
+        <h5 className="leaderboard-title">{event} - Round {round}</h5>
+        <div className="export" onClick={handleExportCSV} title="Export CSV">
+          <h6 className="export-text">Export as CSV</h6>
+          <img src={downloadIcon}></img>
+        </div>
+      </div>
       
       <div className="shadow-sm">
         <table className="table">

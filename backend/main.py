@@ -12,6 +12,9 @@ from fastapi.middleware.cors import CORSMiddleware
 import pandas as pd
 import math
 
+import csv
+import io
+
 # --------------------------
 # GLOBAL VARIABLES & CONFIG
 # --------------------------
@@ -471,3 +474,50 @@ def edit_result(req: editResultRequest):
         "status": "success",
         "message": "Result updated"
     }
+
+
+@app.get("/export_csv")
+def export_csv():
+    """
+    Downloads the competition results as a csv file
+    """
+    global app_settings
+
+    comp_name = app_settings.get("competition_name", "Competition")
+    event = app_settings.get("event", "3x3")
+    round_num = app_settings.get("round", "1")
+    fmt = app_settings.get("avg_format", "ao5").lower()
+
+    # use competition name as filename
+    filename = f"{comp_name.replace(' ', "_")}.csv"
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+    
+    # create rows for title and subtitle
+    writer.writerow([comp_name])
+    writer.writerow([f"{event} - Round {round_num}"])
+    writer.writerow([])
+    
+    # leaderboard headers
+    num_solves = 3 if fmt == "mo3" else 5
+    avg_col_name = "Mean" if fmt == "mo3" else "Average"
+    headers = ["#", "Name"] + [f"Solve {i+1}" for i in range(num_solves)] + [avg_col_name, "Best"]
+    writer.writerow(headers)
+    
+    # get formatted leaderboard
+    board_data = get_leaderboard()["leaderboard"]
+    for row in board_data:
+        data_row = [
+            row["rank"],
+            row["name"]
+        ] + row["solves"] + [row["average"], row["best"]]
+        writer.writerow(data_row)
+        
+    output.seek(0)
+    
+    return StreamingResponse(
+        iter([output.getvalue()]),
+        media_type="text/csv",
+        headers={"Content-Disposition": f"attachment; filename={filename}"}
+    )

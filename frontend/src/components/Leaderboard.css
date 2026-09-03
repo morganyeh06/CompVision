@@ -13,9 +13,34 @@
   background-color: #272727;
 }
 
+.leaderboard-top {
+    width: 100%;
+    display: flex;
+    margin-bottom: 15px;;
+}
+
 .leaderboard-title {
+    margin-top: auto;
+    margin-bottom: auto;
     text-align: left;
     font-weight: 600
+}
+
+.export-text {
+    margin-top: auto;
+    margin-bottom: auto;
+    margin-right: 5px;
+    white-space: nowrap;
+}
+
+.export {
+    margin-left: auto;
+    margin-right: 10px;
+    display: flex;
+}
+
+.export:hover {
+    cursor: pointer;
 }
 
 .table {

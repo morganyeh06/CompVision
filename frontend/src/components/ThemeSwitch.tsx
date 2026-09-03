@@ -22,6 +22,9 @@ export default function ThemeSwitch() {
         // change App appearance depending on appTheme
         document.documentElement.setAttribute('data-bs-theme', appTheme);
         localStorage.setItem('theme', appTheme)
+
+        // trigger theme change event
+        window.dispatchEvent(new Event('themechange'));
     }, [appTheme]);
 
 
