@@ -1,3 +1,6 @@
+--find-links https://download.pytorch.org/whl/cpu/torch_stable.html
+torch
+torchvision
 fastapi
 uvicorn[standard]
 pydantic
