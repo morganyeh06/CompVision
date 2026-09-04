@@ -1,0 +1,11 @@
+fastapi
+uvicorn[standard]
+pydantic
+pandas
+opencv-python-headless
+ultralytics
+mediapipe
+easyocr
+requests
+python-dotenv
+numpy
