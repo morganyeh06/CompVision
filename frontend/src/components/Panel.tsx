@@ -2,6 +2,7 @@ import './Panel.css';
 import { useState } from 'react';
 import Dropdown from './Dropdown.tsx';
 import NumInput from './NumInput.tsx';
+import { API_URL } from '../App.tsx';
 
 export interface CompSettings {
     competition_name: string;
@@ -56,7 +57,7 @@ export default function Panel( {isRunning, isBackendReady, setIsRunning, saveSet
 
         setIsRunning(false);
         try {
-          fetch("http://127.0.0.1:8000/reset", { "method": "POST"})
+          fetch(`${API_URL}/reset`, { "method": "POST"})
         } catch(error) {
           console.error("Failed to reset backend state: ", error)
         }
@@ -83,7 +84,7 @@ export default function Panel( {isRunning, isBackendReady, setIsRunning, saveSet
 
         try {
             // send payload to endpoint
-            const response = await fetch("http://localhost:8000/settings", {
+            const response = await fetch(`${API_URL}/settings`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"

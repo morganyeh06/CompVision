@@ -6,6 +6,8 @@ import { type CompSettings } from './components/Panel.tsx';
 import VideoStream from './components/VideoStream.tsx'
 import Leaderboard from './components/Leaderboard.tsx';
 
+export const API_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
+
 function App() {
   // app states
   const [isBackendReady, setIsBackendReady] = useState<boolean>(false);
@@ -24,7 +26,7 @@ function App() {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 500);
   
-        const res = await fetch("http://127.0.0.1:8000/backend_status", { 
+        const res = await fetch(`${API_URL}/backend_status`, { 
           signal: controller.signal,
           cache: 'no-store' 
         });

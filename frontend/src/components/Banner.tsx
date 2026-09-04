@@ -9,7 +9,7 @@ export default function Banner() {
             <div className="tr-corner">
                 <ThemeSwitch></ThemeSwitch>
                 <div className="repo-link">
-                    <a href="https://github.com/morganyeh06/cubing-data-entry-system" target='_blank'>
+                    <a href="https://github.com/morganyeh06/CompVision" target='_blank'>
                         <img title='Project Repository' src={GitHubLogo} 
                             alt="Project Repository" className="link-img"></img>
                     </a>

@@ -6,6 +6,7 @@ import AddBlack from '../assets/plus-black.svg';
 import AddWhite from '../assets/plus-white.svg';
 import DownloadBlack from '../assets/download-black.svg';
 import DownloadWhite from '../assets/download-white.svg';
+import { API_URL } from '../App';
 
 interface CompetitorResult {
     rank: number | string;
@@ -58,7 +59,7 @@ export default function Leaderboard({ avgFormat, event, round }: Props) {
       // fetchLeaderboard() returns the current leaderboard from the backend endpoint
       async function fetchLeaderboard() {
         try {
-          const response = await fetch("http://127.0.0.1:8000/leaderboard", { cache: 'no-store' });
+          const response = await fetch(`${API_URL}/leaderboard`, { cache: 'no-store' });
             if (response.ok) {
               const data = await response.json();
               setLeaderboard(data.leaderboard);
@@ -96,7 +97,7 @@ export default function Leaderboard({ avgFormat, event, round }: Props) {
       };
 
       try {
-        await fetch("http://127.0.0.1:8000/edit_result", {
+        await fetch(`${API_URL}/edit_result`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload)
@@ -113,7 +114,7 @@ export default function Leaderboard({ avgFormat, event, round }: Props) {
 
     // handleExportCSV() downloads the current leaderboard as a csv file
     function handleExportCSV() {
-      window.open("http://127.0.0.1:8000/export_csv", "_blank");
+      window.open(`${API_URL}/export_csv`, "_blank");
     }
 
 

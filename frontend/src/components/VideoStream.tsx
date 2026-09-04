@@ -2,6 +2,7 @@ import './VideoStream.css'
 import Placeholder from '../assets/placeholder.jpg';
 import Dropdown from './Dropdown';
 import { useState, useEffect, useRef } from 'react';
+import { API_URL } from '../App';
 
 interface Props {
   isRunning: boolean
@@ -49,7 +50,7 @@ export default function VideoStream( { isRunning, isBackendReady, competitorList
 
     
 
-    const img_src = isBackendReady ? "http://127.0.0.1:8000/video_feed" : Placeholder;
+    const img_src = isBackendReady ? `${API_URL}/video_feed` : Placeholder;
 
     useEffect(() => {
       if (competitorList && competitorList.length > 0 && currCompetitor === "placeholder") {
@@ -68,8 +69,8 @@ export default function VideoStream( { isRunning, isBackendReady, competitorList
         try {
           // simultaneously fetch data from both endpoints
           const [cvRes, boardRes] = await Promise.all([
-            fetch("http://127.0.0.1:8000/latest_result", { cache: 'no-store' }),
-            fetch("http://127.0.0.1:8000/leaderboard", { cache: 'no-store' })
+            fetch(`${API_URL}/latest_result`, { cache: 'no-store' }),
+            fetch(`${API_URL}/leaderboard`, { cache: 'no-store' })
           ]);
 
           if (cvRes.ok) {
@@ -122,7 +123,7 @@ export default function VideoStream( { isRunning, isBackendReady, competitorList
           };
 
           try {
-            const response = await fetch("http://127.0.0.1:8000/save_result", {
+            const response = await fetch(`${API_URL}/save_result`, {
               method: "POST",
               headers: {
                 "Content-Type": "application/json"
@@ -154,7 +155,7 @@ export default function VideoStream( { isRunning, isBackendReady, competitorList
 
       if (currCompetitor !== "placeholder") {
         try {
-          fetch("http://127.0.0.1:8000/reset_cv", { "method": "POST"})
+          fetch(`${API_URL}/reset_cv`, { "method": "POST"})
         } catch(error) {
           console.error("Failed to reset backend CV state: ", error)
         }
