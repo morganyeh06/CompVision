@@ -4,7 +4,6 @@ from fastapi.responses import StreamingResponse
 from contextlib import asynccontextmanager
 from cv_engine.src.detect_penalty import detect_penalty
 from cv_engine.src.pipeline import State, process_state_machine
-from ultralytics import YOLO
 
 from pydantic import BaseModel
 from typing import List, Optional
@@ -27,6 +26,7 @@ camera.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
 TIMER_CLASS = "timer"
 CARD_CLASS = "judge_card"
 YOLO_FREQ = 15 # how often to run YOLO on a frame
+yolo_model = None
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -78,6 +78,15 @@ class editResultRequest(BaseModel):
 # HELPER FUNCTIONS
 # --------------------
 
+def get_yolo_model():
+    """Lazy loader for YOLO model to save boot-time memory"""
+    global yolo_model
+    if yolo_model is None:
+        from ultralytics import YOLO  # Lazy import
+        yolo_model = YOLO('cv_engine/models/best.pt')
+    return yolo_model
+
+
 def generate_frames():
     """
     Continually reads from camera, encodes frame, and sends a HTTP response
@@ -87,7 +96,7 @@ def generate_frames():
     current_penalty_str = None
 
     # load YOLO model
-    model = YOLO('cv_engine/models/best.pt')
+    model = get_yolo_model()
 
     frame_count = 0
 
