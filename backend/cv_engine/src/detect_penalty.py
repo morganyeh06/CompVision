@@ -1,4 +1,3 @@
-import easyocr
 import threading
 import mediapipe as mp
 import cv2
@@ -12,6 +11,7 @@ from pathlib import Path
 
 class AsyncOCR:
     def __init__(self, languages=["en"], use_gpu=False):
+        import easyocr
         self.reader = easyocr.Reader(languages, gpu=use_gpu)
         self.is_processing = False
         self.latest_result = None
