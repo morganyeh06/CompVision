@@ -12,3 +12,4 @@ easyocr
 requests
 python-dotenv
 numpy
+websockets

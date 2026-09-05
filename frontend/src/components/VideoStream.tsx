@@ -17,6 +17,10 @@ interface CompetitorData {
 }
 
 export default function VideoStream( { isRunning, isBackendReady, competitorList, avgFormat } : Props) {
+    const videoRef = useRef<HTMLVideoElement>(null);
+    const canvasRef = useRef<HTMLCanvasElement>(null);
+    const wsRef = useRef<WebSocket | null>(null);
+
     // competitor options 
     const options = (isRunning && competitorList != null) ? competitorList : ["Select a competitor"];
     const [currCompetitor, setCurrCompetitor] = useState<string>((isRunning && competitorList != null) ? options[0] : "placeholder");
@@ -49,8 +53,60 @@ export default function VideoStream( { isRunning, isBackendReady, competitorList
     const [cvStatus, setCvStatus] = useState<string | null>(null);
 
     
+    useEffect(() => {
+        if (!isBackendReady) return;
 
-    const img_src = isBackendReady ? `${API_URL}/video_feed` : Placeholder;
+        let stream: MediaStream | null = null;
+        let animationFrameId: number;
+        let lastCaptureTime = 0;
+        const fpsInterval = 1000 / 15; // Target ~15 FPS (66.6ms)
+
+        const startSystem = async () => {
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({ video: { width: 1280, height: 720 } });
+                if (videoRef.current) {
+                    videoRef.current.srcObject = stream;
+                }
+
+                const baseUrl = (import.meta.env.VITE_WS_URL || "ws://127.0.0.1:8000").replace(/\/$/, "");
+                wsRef.current = new WebSocket(`${baseUrl}/ws/video_feed`);
+
+                // recursive capture function
+                const captureFrame = (timestamp: number) => {
+                    if (timestamp - lastCaptureTime >= fpsInterval) {
+                        if (videoRef.current && canvasRef.current && wsRef.current?.readyState === WebSocket.OPEN) {
+                            const context = canvasRef.current.getContext('2d');
+                            context?.drawImage(videoRef.current, 0, 0, 1280, 720);
+                            
+                            // compress and send
+                            const frameData = canvasRef.current.toDataURL('image/jpeg', 0.5);
+                            wsRef.current.send(frameData);
+                            
+                            lastCaptureTime = timestamp;
+                        }
+                    }
+                    // request next frame
+                    animationFrameId = requestAnimationFrame(captureFrame);
+                };
+                wsRef.current.onopen = () => {
+                    // start capture loop
+                    animationFrameId = requestAnimationFrame(captureFrame);
+                };
+            } catch (err) {
+                console.error("Camera access denied or WS failed", err);
+            }
+        };
+
+        startSystem();
+
+        // Cleanup
+        return () => {
+            if (animationFrameId) cancelAnimationFrame(animationFrameId);
+            if (stream) stream.getTracks().forEach(track => track.stop());
+            if (wsRef.current) wsRef.current.close();
+        };
+    }, [isBackendReady]);
+
 
     useEffect(() => {
       if (competitorList && competitorList.length > 0 && currCompetitor === "placeholder") {
@@ -171,14 +227,23 @@ export default function VideoStream( { isRunning, isBackendReady, competitorList
           </div>
           
           <div className="video-container">
-            {!isBackendReady ? (
-              <div className="position-absolute top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center">
-                <div className="spinner-border text-light" id="loading-icon" role="status">
-                  <span className="visually-hidden">Loading...</span>
+            {isBackendReady ? (
+              <>
+                <video ref={videoRef} autoPlay playsInline muted className="live-feed" />
+                {/* Hidden canvas used solely for extracting image data */}
+                <canvas ref={canvasRef} width="1280" height="720" style={{ display: 'none' }} />
+              </>
+            ) : (
+              <>
+                <div className="position-absolute top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center">
+                  <div className="spinner-border text-light" id="loading-icon" role="status">
+                    <span className="visually-hidden">Loading...</span>
+                  </div>
                 </div>
-              </div>
-            ) : null}
-            <img src={img_src} alt="Live Camera Feed" className="live-feed"></img>
+                <img src={Placeholder} alt="Live Camera Feed" className="live-feed"></img>
+              </>
+            )}
+            
           </div>
           
           <div className="result-container">

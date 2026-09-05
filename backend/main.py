@@ -14,13 +14,17 @@ import math
 import csv
 import io
 
+from fastapi import WebSocket, WebSocketDisconnect
+import base64
+import numpy as np
+
 # --------------------------
 # GLOBAL VARIABLES & CONFIG
 # --------------------------
 
-camera = cv2.VideoCapture(0)
+'''camera = cv2.VideoCapture(0)
 camera.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
-camera.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
+camera.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)'''
 
 # YOLO Classes
 TIMER_CLASS = "timer"
@@ -34,7 +38,7 @@ async def lifespan(app: FastAPI):
     yield
     
     print("Shutting down")
-    camera.release()
+    #camera.release()
 
 app = FastAPI(lifespan=lifespan)
 
@@ -85,77 +89,6 @@ def get_yolo_model():
         from ultralytics import YOLO  # Lazy import
         yolo_model = YOLO('cv_engine/models/best.pt')
     return yolo_model
-
-
-def generate_frames():
-    """
-    Continually reads from camera, encodes frame, and sends a HTTP response
-    """
-    # Variables for text display
-    current_time_str = None
-    current_penalty_str = None
-
-    # load YOLO model
-    model = get_yolo_model()
-
-    frame_count = 0
-
-    while True:
-        success, frame = camera.read()
-        if not success:
-            break
-
-        # run YOLO every 15 frames
-        if frame_count % YOLO_FREQ == 0:
-            # Run YOLO inference on the current frame
-            results = model(frame, verbose=False)
-            
-            timer_roi = None
-            card_roi = None
-            
-            # check if timer/card in captured in frame
-            for box in results[0].boxes:
-                class_id = int(box.cls[0])
-                class_name = results[0].names[class_id]
-                            
-                if class_name == TIMER_CLASS:
-                    x1, y1, x2, y2 = map(int, box.xyxy[0])
-                    timer_roi = frame[y1:y2, x1:x2]
-            
-                if class_name == CARD_CLASS:
-                    x1, y1, x2, y2 = map(int, box.xyxy[0])
-                    card_roi = frame[y1:y2, x1:x2]
-            
-            # determine penalty for solve
-            penalty = detect_penalty(frame, card_roi)
-            
-            # transition the state machine; get current state and time
-            current_state, time_str = process_state_machine(penalty, timer_roi)
-
-            # update cv state
-            if time_str is not None:
-                cv_state["time"] = time_str
-            if penalty is not None and current_state == State.COOLDOWN:
-                cv_state["penalty"] = penalty
-
-            cv_state["state"] = str(current_state)
-            
-
-        # increase frame_count, reset if large
-        frame_count += 1
-        if frame_count >= 1000:
-            frame_count = 0
-
-        # compress the OpenCV image into a JPEG
-        ret, buffer = cv2.imencode('.jpg', frame)
-        if not ret:
-            continue
-            
-        frame_bytes = buffer.tobytes()
-
-        # yield the frame using the MJPEG boundary format
-        yield (b'--frame\r\n'
-               b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
 
 
 def parse_wca_time(time_str: str):
@@ -232,15 +165,49 @@ def get_backend_status():
     return { "status": "success" }
 
 
-@app.get("/video_feed")
-def video_feed():
-    """
-    Gets live footage from webcam
-    """
-    return StreamingResponse(
-        generate_frames(),
-        media_type="multipart/x-mixed-replace; boundary=frame"
-    )
+@app.websocket("/ws/video_feed")
+async def websocket_video_feed(websocket: WebSocket):
+    await websocket.accept()
+    model = get_yolo_model()
+    frame_count = 0
+
+    try:
+        while True:
+            # get base64 frame from React
+            data = await websocket.receive_text()
+
+            # convert base64 back to OpenCV frame
+            encoded_data = data.split(",")[1]
+            nparr = np.frombuffer(base64.b64decode(encoded_data), np.uint8)
+            frame = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+
+            # process frame via YOLO
+            if frame_count % YOLO_FREQ == 0:
+                results = model(frame, verbose=False)
+                timer_roi, card_roi = None, None
+
+                for box in results[0].boxes:
+                    class_id = int(box.cls[0])
+                    class_name = results[0].names[class_id]
+                    if class_name == TIMER_CLASS:
+                        x1, y1, x2, y2 = map(int, box.xyxy[0])
+                        timer_roi = frame[y1:y2, x1:x2]
+                    if class_name == CARD_CLASS:
+                        x1, y1, x2, y2 = map(int, box.xyxy[0])
+                        card_roi = frame[y1:y2, x1:x2]
+
+                penalty = detect_penalty(frame, card_roi)
+                current_state, time_str = process_state_machine(penalty, timer_roi)
+
+                # update global state
+                if time_str: cv_state["time"] = time_str
+                if penalty and current_state == State.COOLDOWN: cv_state["penalty"] = penalty
+                cv_state["state"] = str(current_state)
+
+            frame_count = (frame_count + 1) % 1000
+
+    except WebSocketDisconnect:
+        print("Client disconnected from video feed.")
 
 
 @app.post("/settings")
