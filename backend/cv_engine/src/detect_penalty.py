@@ -11,10 +11,18 @@ from pathlib import Path
 
 class AsyncOCR:
     def __init__(self, languages=["en"], use_gpu=False):
-        import easyocr
-        self.reader = easyocr.Reader(languages, gpu=use_gpu)
+        self.languages = languages
+        self.use_gpu = use_gpu
+        self._reader = None
         self.is_processing = False
         self.latest_result = None
+
+    @property
+    def reader(self):
+        if self._reader is None:
+            import easyocr
+            self._reader = easyocr.Reader(self.languages, gpu=self.use_gpu)
+        return self._reader
 
     def process_roi_async(self, roi_image):
         """
@@ -73,22 +81,32 @@ class AsyncOCR:
 # GLOBAL VARIABLES
 # --------------------
 
-# OCR Config
-ocr_reader = AsyncOCR(use_gpu=False)
+_ocr_reader = None
+_detector = None
 
-# MediaPipe config
-CURRENT_DIR = Path(__file__).resolve().parent
-MODEL_PATH = str(CURRENT_DIR.parent / "models" / "hand_landmarker.task")
-base_options = python.BaseOptions(model_asset_path=MODEL_PATH)
-options = vision.HandLandmarkerOptions(
-    base_options=base_options,
-    num_hands=1,
-    min_hand_detection_confidence=0.6,
-    min_hand_presence_confidence=0.6,
-    min_tracking_confidence=0.6,
-    running_mode=vision.RunningMode.IMAGE 
-)
-detector = vision.HandLandmarker.create_from_options(options)
+def get_ocr_reader():
+    global _ocr_reader
+    if _ocr_reader is None:
+        _ocr_reader = AsyncOCR(use_gpu=False)
+    return _ocr_reader
+
+def get_detector():
+    global _detector
+    if _detector is None:
+        CURRENT_DIR = Path(__file__).resolve().parent
+        MODEL_PATH = str(CURRENT_DIR.parent / "models" / "hand_landmarker.task")
+        base_options = python.BaseOptions(model_asset_path=MODEL_PATH)
+        options = vision.HandLandmarkerOptions(
+            base_options=base_options,
+            num_hands=1,
+            min_hand_detection_confidence=0.6,
+            min_hand_presence_confidence=0.6,
+            min_tracking_confidence=0.6,
+            running_mode=vision.RunningMode.IMAGE 
+        )
+        _detector = vision.HandLandmarker.create_from_options(options)
+    return _detector
+
 
 # --------------------
 # PENALTY DETECTION
@@ -102,7 +120,7 @@ def read_card_text(card_roi):
         return None
 
     # run OCR
-    results = ocr_reader.readtext(card_roi, detail=0)
+    results = get_ocr_reader().readtext(card_roi, detail=0)
     if not results:
         return None
     raw_text = "".join(results).upper()
@@ -124,7 +142,7 @@ def classify_hand_gesture(frame):
     """
     rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
     mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb_frame)
-    results = detector.detect(mp_image)
+    results = get_detector().detect(mp_image)
 
     if not results.hand_landmarks:
         return None
@@ -182,8 +200,9 @@ def detect_penalty(frame, card_roi):
     """
     # read text on card if it exists
     if card_roi is not None:
-        ocr_reader.process_roi_async(card_roi)
-        return ocr_reader.get_latest_result()
+        ocr = get_ocr_reader()
+        ocr.process_roi_async(card_roi)
+        return ocr.get_latest_result()
 
     # look for hand gesture if card not found
     gesture = classify_hand_gesture(frame)
