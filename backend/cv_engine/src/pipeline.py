@@ -1,7 +1,8 @@
 import cv2
 import time
 from enum import Enum
-from ultralytics import YOLO
+#from ultralytics import YOLO
+from cv_engine.src.yolo_onnx import YOLO_ONNX
 
 from cv_engine.src.detect_penalty import detect_penalty
 from cv_engine.src.read_timer import read_time
