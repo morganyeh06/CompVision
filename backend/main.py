@@ -295,7 +295,7 @@ def get_latest_result():
     penalty = cv_state["penalty"]
 
     # calculate final result
-    final_result = calculate_wca_result(raw_time, penalty) if raw_time else None
+    final_result = calculate_wca_result(raw_time, penalty) if (raw_time and raw_time != ".") else None
 
     return {
         "raw_time": raw_time,
