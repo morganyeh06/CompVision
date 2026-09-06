@@ -10,4 +10,4 @@ requests
 python-dotenv
 numpy
 websockets
-onnxruntime-cpu
+onnxruntime
