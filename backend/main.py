@@ -19,8 +19,8 @@ from fastapi import WebSocket, WebSocketDisconnect
 import base64
 import numpy as np
 
-import os
-import psutil
+'''import os
+import psutil'''
 
 # --------------------------
 # GLOBAL VARIABLES & CONFIG
@@ -168,11 +168,11 @@ def get_backend_status():
     return { "status": "success" }
 
 
-@app.get("/memory")
+'''@app.get("/memory")
 def get_memory_usage():
     process = psutil.Process(os.getpid())
     mem_mb = process.memory_info().rss / 1024 / 1024
-    return {"memory_mb": round(mem_mb, 2)}
+    return {"memory_mb": round(mem_mb, 2)}'''
 
 
 @app.websocket("/ws/video_feed")
