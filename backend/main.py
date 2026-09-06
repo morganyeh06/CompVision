@@ -4,6 +4,7 @@ from fastapi.responses import StreamingResponse
 from contextlib import asynccontextmanager
 from cv_engine.src.detect_penalty import detect_penalty
 from cv_engine.src.pipeline import State, process_state_machine
+from cv_engine.src.yolo_onnx import YOLO_ONNX
 
 from pydantic import BaseModel
 from typing import List, Optional
@@ -18,13 +19,12 @@ from fastapi import WebSocket, WebSocketDisconnect
 import base64
 import numpy as np
 
+import os
+import psutil
+
 # --------------------------
 # GLOBAL VARIABLES & CONFIG
 # --------------------------
-
-'''camera = cv2.VideoCapture(0)
-camera.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
-camera.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)'''
 
 # YOLO Classes
 TIMER_CLASS = "timer"
@@ -83,11 +83,14 @@ class editResultRequest(BaseModel):
 # --------------------
 
 def get_yolo_model():
-    """Lazy loader for YOLO model to save boot-time memory"""
+    """Lazy loader for ONNX YOLO model to save boot-time memory"""
     global yolo_model
     if yolo_model is None:
-        from ultralytics import YOLO  # Lazy import
-        yolo_model = YOLO('cv_engine/models/best.pt')
+        # map index 0 and 1 to model's exact classes
+        yolo_model = YOLO_ONNX(
+            model_path="cv_engine/models/best.onnx", 
+            class_names=[CARD_CLASS, TIMER_CLASS]
+        )
     return yolo_model
 
 
@@ -165,6 +168,13 @@ def get_backend_status():
     return { "status": "success" }
 
 
+@app.get("/memory")
+def get_memory_usage():
+    process = psutil.Process(os.getpid())
+    mem_mb = process.memory_info().rss / 1024 / 1024
+    return {"memory_mb": round(mem_mb, 2)}
+
+
 @app.websocket("/ws/video_feed")
 async def websocket_video_feed(websocket: WebSocket):
     await websocket.accept()
@@ -181,12 +191,20 @@ async def websocket_video_feed(websocket: WebSocket):
             nparr = np.frombuffer(base64.b64decode(encoded_data), np.uint8)
             frame = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
 
-            # process frame via YOLO
+            # process frame via ONNX YOLO
             if frame_count % YOLO_FREQ == 0:
-                results = model(frame, verbose=False)
+                # results = model(frame, verbose=False)
+                detections = model.predict(frame, conf_threshold=0.5)
                 timer_roi, card_roi = None, None
 
-                for box in results[0].boxes:
+                for det in detections:
+                    x1, y1, x2, y2 = det["box"]
+                    if det["class_name"] == TIMER_CLASS:
+                        timer_roi = frame[y1:y2, x1:x2]
+                    elif det["class_name"] == CARD_CLASS:
+                        card_roi = frame[y1:y2, x1:x2]
+
+                '''for box in results[0].boxes:
                     class_id = int(box.cls[0])
                     class_name = results[0].names[class_id]
                     if class_name == TIMER_CLASS:
@@ -194,7 +212,7 @@ async def websocket_video_feed(websocket: WebSocket):
                         timer_roi = frame[y1:y2, x1:x2]
                     if class_name == CARD_CLASS:
                         x1, y1, x2, y2 = map(int, box.xyxy[0])
-                        card_roi = frame[y1:y2, x1:x2]
+                        card_roi = frame[y1:y2, x1:x2]'''
 
                 penalty = detect_penalty(frame, card_roi)
                 current_state, time_str = process_state_machine(penalty, timer_roi)

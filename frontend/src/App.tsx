@@ -20,6 +20,8 @@ function App() {
 
   // checks if backend is ready
   useEffect(() => {
+    if (isBackendReady) return;
+
     // checkBackend() checks if the backend has finished booting up
      async function checkBackend() {
       try {
@@ -42,7 +44,7 @@ function App() {
     checkBackend();
     const interval = setInterval(checkBackend, 1000);
     return () => clearInterval(interval)
-  }, []);
+  }, [isBackendReady]);
 
   return (
     <>
