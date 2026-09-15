@@ -483,7 +483,7 @@ def export_csv():
     fmt = app_settings.get("avg_format", "ao5").lower()
 
     # use competition name as filename
-    filename = f"{comp_name.replace(' ', "_")}.csv"
+    filename = f"{comp_name.replace(' ', '_')}.csv"
 
     output = io.StringIO()
     writer = csv.writer(output)
