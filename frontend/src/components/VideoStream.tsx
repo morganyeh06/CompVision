@@ -68,7 +68,7 @@ export default function VideoStream( { isRunning, isBackendReady, competitorList
                     videoRef.current.srcObject = stream;
                 }
 
-                const baseUrl = (import.meta.env.VITE_WS_URL || "ws://127.0.0.1:8000").replace(/\/$/, "");
+                const baseUrl = (import.meta.env.WS_ENDPOINT || "ws://127.0.0.1:8000").replace(/\/$/, "");
                 wsRef.current = new WebSocket(`${baseUrl}/ws/video_feed`);
 
                 // recursive capture function

@@ -6,7 +6,7 @@ import { type CompSettings } from './components/Panel.tsx';
 import VideoStream from './components/VideoStream.tsx'
 import Leaderboard from './components/Leaderboard.tsx';
 
-export const API_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
+export const API_URL = import.meta.env.API_ENDPOINT || "http://127.0.0.1:8000";
 
 function App() {
   // app states
