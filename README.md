@@ -1,15 +1,22 @@
 # CompVision
-An automatic scoretaking system for speedcubing competitions utilizing live competition footage
+CompVision is an automated data entry and score-taking system for speedcubing competitions. By analyzing live webcam feeds, the application automatically reads solve times from displays and detects solve penalties (+2s, DNF) via hand gestures or physical judge cards.
 
-### Built With
-* Python
-* FastAPI
-* YOLO
-* OpenCV
-* React
-* TypeScript
-* Bootstrap
-* Pandas
+**Link:** https://comp-vision-one.vercel.app/
+
+## Architecture & Tech Stack
+
+### **Frontend**
+* **Framework:** React + TypeScript (Vite)
+* **Styling:** Bootstrap CSS
+* **Deployment:** Vercel
+
+### **Backend & Computer Vision Engine**
+* **API / WebSocket:** FastAPI + Uvicorn
+* **Hand Gesture Detection:** MediaPipe Task Vision API
+* **Object Detection & Model Execution:** YOLO / ONNX Runtime
+* **Text Recognition (OCR):** EasyOCR
+* **Data Processing:** Pandas
+* **Containerization & Hosting:** Docker on Google Cloud Run
 
 ## Features
 * **Live Video Streaming:** Streams real-time webcam frames from browser to backend via low-latency WebSockets using HTML5 Canvas capture
